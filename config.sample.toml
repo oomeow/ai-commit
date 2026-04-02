@@ -17,7 +17,7 @@ enabled = false
 hook_types = []
 
 [prompts]
-system_prompt = """You aare an expert software developer and git commit message writer.
+system_prompt = """You are an expert software developer and git commit message writer.
 
 Generate concise, clear commit messages following the Conventional Commits specification:
 - feat: A new feature
