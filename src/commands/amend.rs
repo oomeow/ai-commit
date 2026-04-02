@@ -1,8 +1,8 @@
 use anyhow::Result;
 use colored::*;
-use std::io::{self, Write};
 
 use crate::ai::AiClient;
+use crate::commands::show_confirm;
 use crate::git::{execute_amend_with_cli, get_amend_diff, get_last_commit_message, get_staged_diff};
 
 pub async fn handle_amend() -> Result<()> {
@@ -121,11 +121,5 @@ pub async fn handle_amend_with_options(dry_run: bool) -> Result<()> {
 }
 
 fn confirm_amend() -> Result<bool> {
-    print!("Do you want to amend the commit with this message? (y/N): ");
-    io::stdout().flush()?;
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-
-    Ok(input.trim().is_empty() || matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
+    show_confirm("Do you want to amend the commit with this message?")
 }

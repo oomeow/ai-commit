@@ -1,3 +1,5 @@
+use std::io::{self, Write};
+
 use anyhow::Result;
 pub mod amend;
 pub mod commit;
@@ -16,4 +18,14 @@ pub async fn execute_command(command: &str) -> Result<()> {
         "config-edit-prompts" => config::edit_prompts_help(),
         _ => Err(anyhow::anyhow!("Unknown command: {}", command)),
     }
+}
+
+pub fn show_confirm(title: &str) -> Result<bool> {
+    print!("{title} (y/n): ");
+    io::stdout().flush()?;
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+
+    Ok(input.trim().is_empty() || matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
 }

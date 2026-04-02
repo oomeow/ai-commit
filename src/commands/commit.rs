@@ -1,8 +1,8 @@
 use anyhow::Result;
 use colored::*;
-use std::io::{self, Write};
 
 use crate::ai::AiClient;
+use crate::commands::show_confirm;
 use crate::git::{execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
 
 pub async fn handle_commit() -> Result<()> {
@@ -60,11 +60,5 @@ pub async fn handle_commit() -> Result<()> {
 }
 
 fn confirm_commit() -> Result<bool> {
-    print!("Do you want to commit with this message? (y/N): ");
-    io::stdout().flush()?;
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-
-    Ok(input.trim().is_empty() || matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
+    show_confirm("Do you want to commit with this message?")
 }

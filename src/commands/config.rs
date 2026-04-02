@@ -1,7 +1,6 @@
-use crate::config::AppConfig;
+use crate::{commands::show_confirm, config::AppConfig};
 use anyhow::Result;
 use colored::*;
-use std::io::Write;
 
 pub fn init_config() -> Result<()> {
     println!("{}", "🔧 Initializing AI Commit configuration...".cyan());
@@ -11,14 +10,7 @@ pub fn init_config() -> Result<()> {
     if config_path.exists() {
         println!("{}", "⚠️  Configuration file already exists.".yellow());
         println!("Location: {}", config_path.display().to_string().bright_blue());
-
-        print!("Do you want to overwrite it? (y/N): ");
-        std::io::stdout().flush()?;
-
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input)?;
-
-        if !(input.trim().is_empty() || matches!(input.trim().to_lowercase().as_str(), "y" | "yes")) {
+        if !show_confirm("Do you want to overwrite it?")? {
             println!("{}", "❌ Configuration initialization cancelled.".red());
             return Ok(());
         }
