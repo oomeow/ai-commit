@@ -53,6 +53,13 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
+    pub fn init() -> Result<()> {
+        let sample_config = fs::read_to_string("config.sample.toml")?;
+        let config: AppConfig = toml::from_str(&sample_config)?;
+        config.save()?;
+        Ok(())
+    }
+
     pub fn load() -> Result<Self> {
         let config_path = Self::config_path()?;
         debug!("Loading configuration from: {}", config_path.display());

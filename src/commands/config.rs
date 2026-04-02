@@ -24,9 +24,7 @@ pub fn init_config() -> Result<()> {
         }
     }
 
-    let config = AppConfig::default();
-
-    config.save()?;
+    AppConfig::init()?;
 
     println!("{}", "✅ Configuration file created successfully!".green());
     println!("Location: {}", config_path.display().to_string().bright_blue());
