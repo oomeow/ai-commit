@@ -62,7 +62,7 @@ impl AiClient {
     }
 
     pub async fn send_chat_request(&self, messages: Vec<Message>) -> Result<String, Box<dyn std::error::Error>> {
-        let config = AppConfig::load().unwrap();
+        let config = AppConfig::load()?;
 
         let request = ChatRequest {
             model: config.api.model.clone(),
