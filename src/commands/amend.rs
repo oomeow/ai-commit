@@ -127,5 +127,5 @@ fn confirm_amend() -> Result<bool> {
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
 
-    Ok(matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
+    Ok(input.trim().is_empty() || matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
 }

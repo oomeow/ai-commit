@@ -18,7 +18,7 @@ pub fn init_config() -> Result<()> {
         let mut input = String::new();
         std::io::stdin().read_line(&mut input)?;
 
-        if !matches!(input.trim().to_lowercase().as_str(), "y" | "yes") {
+        if !(input.trim().is_empty() || matches!(input.trim().to_lowercase().as_str(), "y" | "yes")) {
             println!("{}", "❌ Configuration initialization cancelled.".red());
             return Ok(());
         }
