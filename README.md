@@ -34,7 +34,7 @@ cd ai-commit
 cargo build --release
 ```
 
-### Install form cargo
+### Install from cargo
 
 ```bash
 cargo install --git https://github.com/oomeow/ai-commit.git
@@ -44,14 +44,15 @@ cargo install --git https://github.com/oomeow/ai-commit.git
 
 1. **Set API Key**:
 
-   ```bash
-   export AI_COMMIT_ARK_API_KEY="your-api-key-here"
-   ```
+    ```bash
+    export AI_COMMIT_ARK_API_KEY="your-api-key-here"
+    ```
 
 2. **Initialize Configuration**:
-   ```bash
-   ai-commit config init
-   ```
+
+    ```bash
+    ai-commit config init
+    ```
 
 ## Usage
 
