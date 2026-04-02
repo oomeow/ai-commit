@@ -34,6 +34,12 @@ cd ai-commit
 cargo build --release
 ```
 
+### 从 cargo 安装
+
+```bash
+cargo install --git https://github.com/oomeow/ai-commit.git
+```
+
 ### 设置
 
 1. **设置 API 密钥**：

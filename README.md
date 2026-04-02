@@ -34,6 +34,12 @@ cd ai-commit
 cargo build --release
 ```
 
+### Install form cargo
+
+```bash
+cargo install --git https://github.com/oomeow/ai-commit.git
+```
+
 ### Setup
 
 1. **Set API Key**:
