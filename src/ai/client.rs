@@ -5,16 +5,16 @@ use serde::{Deserialize, Serialize};
 use crate::config::AppConfig;
 
 #[derive(Serialize, Debug)]
-pub struct Message {
-    role: String,
-    content: String,
+pub struct Message<'a> {
+    role: &'a str,
+    content: &'a str,
 }
 
 #[derive(Serialize)]
 pub struct ChatRequest<'a> {
     model: &'a str,
     thinking: Thinking,
-    messages: Vec<Message>,
+    messages: &'a [Message<'a>],
     max_tokens: Option<usize>,
     temperature: Option<f32>,
 }
@@ -58,7 +58,7 @@ impl AiClient {
         AiClient { client, config }
     }
 
-    pub async fn send_chat_request(&self, messages: Vec<Message>) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn send_chat_request(&self, messages: &[Message<'_>]) -> Result<String, Box<dyn std::error::Error>> {
         let request = ChatRequest {
             model: self.config.api.model.as_ref(),
             messages,
@@ -90,10 +90,11 @@ impl AiClient {
     }
 
     pub async fn generate_commit_message(&self, diff: &str) -> Result<String, Box<dyn std::error::Error>> {
-        let system_message = Message { role: "system".to_string(), content: self.config.prompts.system_prompt.clone() };
-        let user_message = Message { role: "user".to_string(), content: self.config.generate_user_prompt(diff) };
-        let messages = vec![system_message, user_message];
+        let user_prompt = self.config.generate_user_prompt(diff);
+        let system_message = Message { role: "system", content: self.config.prompts.system_prompt.as_str() };
+        let user_message = Message { role: "user", content: user_prompt.as_str() };
+        let messages = [system_message, user_message];
         debug!("Sending messages: {messages:?}");
-        self.send_chat_request(messages).await
+        self.send_chat_request(&messages).await
     }
 }
