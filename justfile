@@ -1,5 +1,5 @@
-test *command:
-    cargo run -- {{command}}
+dev *command:
+    RUST_LOG=debug cargo run -- {{command}}
 
 build:
     cargo build -r

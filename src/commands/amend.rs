@@ -9,8 +9,8 @@ pub async fn handle_amend() -> Result<()> {
     let ai_client = AiClient::new();
 
     // 检查是否有staged changes或者需要amend
-    let staged_diff = get_staged_diff()?;
-    let amend_diff = get_amend_diff()?;
+    let staged_diff = get_staged_diff(&ai_client.config.commit)?;
+    let amend_diff = get_amend_diff(&ai_client.config.commit)?;
     let last_commit_msg = get_last_commit_message()?;
 
     let diff_content = if !staged_diff.is_empty() {
@@ -64,8 +64,8 @@ pub async fn handle_amend() -> Result<()> {
 pub async fn handle_amend_with_options(dry_run: bool) -> Result<()> {
     let ai_client = AiClient::new();
 
-    let staged_diff = get_staged_diff()?;
-    let amend_diff = get_amend_diff()?;
+    let staged_diff = get_staged_diff(&ai_client.config.commit)?;
+    let amend_diff = get_amend_diff(&ai_client.config.commit)?;
     let last_commit_msg = get_last_commit_message()?;
 
     let diff_content = if !staged_diff.is_empty() {

@@ -1,8 +1,8 @@
-pub const SYSTEM_PROMPT: &str = r#"You are an expert software developer and git commit message writer. 
+pub const SYSTEM_PROMPT: &str = r#"You are an expert software developer and git commit message writer.
 
 Generate concise, clear commit messages following the Conventional Commits specification:
 - feat: A new feature
-- fix: A bug fix  
+- fix: A bug fix
 - docs: Documentation only changes
 - style: Changes that do not affect the meaning of the code
 - refactor: A code change that neither fixes a bug nor adds a feature
@@ -25,7 +25,3 @@ Git diff:
 ```
 
 Please provide only the commit message, no explanations or additional text."#;
-
-pub fn format_commit_prompt(diff: &str) -> String {
-    USER_PROMPT_TEMPLATE.replace("{diff}", diff)
-}

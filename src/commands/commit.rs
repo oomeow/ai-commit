@@ -8,8 +8,8 @@ use crate::git::{execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
 pub async fn handle_commit() -> Result<()> {
     let ai_client = AiClient::new();
 
-    let staged_diff = get_staged_diff()?;
-    let unstaged_diff = get_unstaged_diff()?;
+    let staged_diff = get_staged_diff(&ai_client.config.commit)?;
+    let unstaged_diff = get_unstaged_diff(&ai_client.config.commit)?;
 
     let (diff_content, is_dry_run) = if !staged_diff.is_empty() {
         println!("{}", "✅ Staged changes found. Generating commit message...".green());

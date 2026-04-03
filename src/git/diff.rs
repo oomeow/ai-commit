@@ -1,10 +1,11 @@
 use anyhow::Result;
 use git2::{DiffOptions, Repository};
+use log::debug;
 use std::str;
 
-use crate::config::AppConfig;
+use crate::config::CommitConfig;
 
-pub fn get_staged_diff() -> Result<String> {
+pub fn get_staged_diff(commit_config: &CommitConfig) -> Result<String> {
     let repo = Repository::open_from_env().unwrap_or_else(|e| {
         eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
         std::process::exit(1);
@@ -20,10 +21,10 @@ pub fn get_staged_diff() -> Result<String> {
 
     let diff = repo.diff_tree_to_tree(Some(&head), Some(&index_tree), Some(&mut diff_opts))?;
 
-    format_diff(diff)
+    format_diff(diff, commit_config)
 }
 
-pub fn get_unstaged_diff() -> Result<String> {
+pub fn get_unstaged_diff(commit_config: &CommitConfig) -> Result<String> {
     let repo = Repository::open_from_env().unwrap_or_else(|e| {
         eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
         std::process::exit(1);
@@ -35,20 +36,19 @@ pub fn get_unstaged_diff() -> Result<String> {
 
     let diff = repo.diff_index_to_workdir(None, Some(&mut diff_opts))?;
 
-    format_diff(diff)
+    format_diff(diff, commit_config)
 }
 
-fn format_diff(diff: git2::Diff) -> Result<String> {
+fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String> {
     let mut diff_content = String::new();
-    let config = AppConfig::load().unwrap_or_default();
 
     diff.print(git2::DiffFormat::Patch, |delta, _hunk, line| {
         if let Some(path) = delta.new_file().path() {
-            if config.commit.ignore_lock_files && should_ignore_file(path) {
+            if commit_config.ignore_lock_files && should_ignore_file(path) {
                 return true;
             }
 
-            if should_ignore_by_custom_patterns(path, &config.commit.custom_ignore_patterns) {
+            if should_ignore_by_custom_patterns(path, commit_config.custom_ignore_patterns.as_slice()) {
                 return true;
             }
         }
@@ -58,6 +58,7 @@ fn format_diff(diff: git2::Diff) -> Result<String> {
         }
         true
     })?;
+    debug!("diff content: \n{diff_content:?}");
 
     Ok(diff_content)
 }
@@ -128,7 +129,7 @@ pub fn get_unstaged_diff_debug() -> Result<String> {
     Ok(diff_content)
 }
 
-pub fn get_amend_diff() -> Result<String> {
+pub fn get_amend_diff(commit_config: &CommitConfig) -> Result<String> {
     let repo = Repository::open_from_env().unwrap_or_else(|e| {
         eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
         std::process::exit(1);
@@ -152,7 +153,7 @@ pub fn get_amend_diff() -> Result<String> {
     // compare parent commit with current index + workdir
     let diff = repo.diff_tree_to_workdir_with_index(Some(&parent_tree), Some(&mut diff_opts))?;
 
-    format_diff(diff)
+    format_diff(diff, commit_config)
 }
 
 pub fn get_last_commit_message() -> Result<String> {

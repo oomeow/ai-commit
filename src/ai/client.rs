@@ -2,10 +2,7 @@ use log::debug;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    ai::format_commit_prompt,
-    config::{AppConfig, prompt::get_system_prompt},
-};
+use crate::config::AppConfig;
 
 #[derive(Serialize, Debug)]
 pub struct Message {
@@ -13,9 +10,9 @@ pub struct Message {
     content: String,
 }
 
-#[derive(Serialize, Debug)]
-pub struct ChatRequest {
-    model: String,
+#[derive(Serialize)]
+pub struct ChatRequest<'a> {
+    model: &'a str,
     thinking: Thinking,
     messages: Vec<Message>,
     max_tokens: Option<usize>,
@@ -51,7 +48,7 @@ struct ChatResponse {
 #[derive(Default)]
 pub struct AiClient {
     client: Client,
-    config: AppConfig,
+    pub config: AppConfig,
 }
 
 impl AiClient {
@@ -62,13 +59,11 @@ impl AiClient {
     }
 
     pub async fn send_chat_request(&self, messages: Vec<Message>) -> Result<String, Box<dyn std::error::Error>> {
-        let config = AppConfig::load()?;
-
         let request = ChatRequest {
-            model: config.api.model.clone(),
+            model: self.config.api.model.as_ref(),
             messages,
-            max_tokens: config.api.max_tokens,
-            temperature: config.api.temperature,
+            max_tokens: self.config.api.max_tokens,
+            temperature: self.config.api.temperature,
             thinking: Thinking::default(),
         };
         let response = self
@@ -95,8 +90,8 @@ impl AiClient {
     }
 
     pub async fn generate_commit_message(&self, diff: &str) -> Result<String, Box<dyn std::error::Error>> {
-        let system_message = Message { role: "system".to_string(), content: get_system_prompt() };
-        let user_message = Message { role: "user".to_string(), content: format_commit_prompt(diff) };
+        let system_message = Message { role: "system".to_string(), content: self.config.prompts.system_prompt.clone() };
+        let user_message = Message { role: "user".to_string(), content: self.config.generate_user_prompt(diff) };
         let messages = vec![system_message, user_message];
         debug!("Sending messages: {messages:?}");
         self.send_chat_request(messages).await
