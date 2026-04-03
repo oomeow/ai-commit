@@ -19,11 +19,11 @@ pub fn format_commit_prompt(diff: &str) -> String {
 }
 
 pub fn get_default_system_prompt() -> String {
-    r#"You are an expert software developer and git commit message writer. 
+    r#"You are an expert software developer and git commit message writer.
 
 Generate concise, clear commit messages following the Conventional Commits specification:
 - feat: A new feature
-- fix: A bug fix  
+- fix: A bug fix
 - docs: Documentation only changes
 - style: Changes that do not affect the meaning of the code
 - refactor: A code change that neither fixes a bug nor adds a feature
@@ -38,7 +38,7 @@ Use bullet points ONLY when there are truly MULTIPLE UNRELATED functional change
 
 WHEN TO USE SINGLE LINE (preferred):
 - Adding one feature (even across multiple files)
-- Fixing one bug (even if it affects multiple files)  
+- Fixing one bug (even if it affects multiple files)
 - Refactoring one area/component (even with many files)
 - Making changes for one single purpose
 - Updating configuration for one goal

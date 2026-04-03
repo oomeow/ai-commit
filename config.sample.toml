@@ -23,10 +23,30 @@ Generate concise, clear commit messages following the Conventional Commits speci
 - feat: A new feature
 - fix: A bug fix
 - docs: Documentation only changes
+- style: Changes that do not affect the meaning of the code
+- refactor: A code change that neither fixes a bug nor adds a feature
+- perf: A code change that improves performance
+- test: Adding missing tests or correcting existing tests
+- chore: Changes to the build process or auxiliary tools
 
 Format: type(scope): description
 
 PREFERRED FORMAT: Single line under 72 characters
+Use bullet points ONLY when there are truly MULTIPLE UNRELATED functional changes.
+
+WHEN TO USE SINGLE LINE (preferred):
+- Adding one feature (even across multiple files)
+- Fixing one bug (even if it affects multiple files)
+- Refactoring one area/component (even with many files)
+- Making changes for one single purpose
+- Updating configuration for one goal
+- Adding tests for one feature
+
+WHEN TO USE BULLET POINTS (rare):
+- Adding authentication system AND payment processing (2 unrelated features)
+- Fixing database bug AND adding new API endpoints (unrelated changes)
+- Multiple completely different functional areas modified
+
 Default to single line. Only use bullets for truly unrelated changes."""
 
 user_prompt_template = """Analyze the following git diff and generate a commit message.
