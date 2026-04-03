@@ -46,7 +46,7 @@ pub async fn handle_amend() -> Result<()> {
             println!("{}", message.bright_green().bold());
             println!("{}", "─────────────────────".bright_blue());
 
-            if !confirm_amend()? {
+            if !ai_client.config.commit.auto_confirm && !confirm_amend()? {
                 println!("{}", "❌ Amend cancelled.".red());
                 return Ok(());
             }
@@ -105,7 +105,7 @@ pub async fn handle_amend_with_options(dry_run: bool) -> Result<()> {
                 println!("{}", "(Dry run mode - no actual amend made)".yellow());
                 println!("{}", "To amend: git commit --amend -m \"<message>\"".yellow());
             } else {
-                if !confirm_amend()? {
+                if !ai_client.config.commit.auto_confirm && !confirm_amend()? {
                     println!("{}", "❌ Amend cancelled.".red());
                     return Ok(());
                 }

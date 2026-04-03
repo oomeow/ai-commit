@@ -44,7 +44,7 @@ pub async fn handle_commit() -> Result<()> {
                 println!("{}", "1. Stage your changes: git add <files>".yellow());
                 println!("{}", "2. Run ai-commit again".yellow());
             } else {
-                if !confirm_commit()? {
+                if !ai_client.config.commit.auto_confirm && !confirm_commit()? {
                     println!("{}", "❌ Commit cancelled.".red());
                     return Ok(());
                 }
