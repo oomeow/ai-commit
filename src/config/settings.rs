@@ -91,9 +91,9 @@ impl AppConfig {
         Ok(PathBuf::from(home).join(".config").join("ai-commit").join("config.toml"))
     }
 
-    pub fn get_api_key() -> Result<String> {
-        std::env::var("AI_COMMIT_ARK_API_KEY")
-            .or_else(|_| std::env::var("ARK_API_KEY"))
-            .map_err(|_| anyhow::anyhow!("API key not found. Please set AI_COMMIT_ARK_API_KEY environment variable"))
-    }
+    // pub fn get_api_key() -> Result<String> {
+    //     std::env::var("AI_COMMIT_ARK_API_KEY")
+    //         .or_else(|_| std::env::var("ARK_API_KEY"))
+    //         .map_err(|_| anyhow::anyhow!("API key not found. Please set AI_COMMIT_ARK_API_KEY environment variable"))
+    // }
 }
