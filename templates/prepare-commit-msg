@@ -11,13 +11,8 @@ if [ "$COMMIT_SOURCE" != "" ] && [ "$COMMIT_SOURCE" != "message" ]; then
     exit 0
 fi
 
-# Check if hook is enabled via configuration
-# First try to read config, if fails or hook is disabled, exit gracefully
-if command -v ai-commit >/dev/null 2>&1; then
-    if ai-commit config show 2>/dev/null | grep -q 'hooks\.enabled = false'; then
-        exit 0
-    fi
-else
+# Require ai-commit to be available; if not, skip silently
+if ! command -v ai-commit >/dev/null 2>&1; then
     echo "ai-commit not found. Skipping AI commit message generation." >&2
     exit 0
 fi
