@@ -4,11 +4,14 @@ use std::path::Path;
 
 use crate::ai::AiClient;
 use crate::commands::show_confirm;
-use crate::git::{execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
+use crate::git::{add_all_files_to_git, execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
 
-pub async fn handle_commit(generate_only: bool, output_file: Option<&Path>) -> Result<()> {
+pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&Path>) -> Result<()> {
     let ai_client = AiClient::new();
 
+    if add {
+        add_all_files_to_git()?;
+    }
     let staged_diff = get_staged_diff(&ai_client.config.commit)?;
     let unstaged_diff = get_unstaged_diff(&ai_client.config.commit)?;
 

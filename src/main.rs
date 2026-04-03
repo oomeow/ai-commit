@@ -18,6 +18,7 @@ async fn main() -> Result<()> {
         .subcommand(
             Command::new("commit")
                 .about("Generate AI commit message for staged changes")
+                .arg(Arg::new("add").long("add").help("Add all files to git").action(clap::ArgAction::SetTrue))
                 .arg(
                     Arg::new("context-limit")
                         .long("context-limit")

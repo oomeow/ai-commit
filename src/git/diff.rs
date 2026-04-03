@@ -1,9 +1,20 @@
 use anyhow::Result;
-use git2::{DiffOptions, Repository};
+use git2::{DiffOptions, IndexAddOption, Repository};
 use log::debug;
 use std::str;
 
 use crate::config::CommitConfig;
+
+pub fn add_all_files_to_git() -> Result<()> {
+    let repo = Repository::open_from_env().unwrap_or_else(|e| {
+        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
+        std::process::exit(1);
+    });
+    let mut index = repo.index().expect("cannot get the Index file");
+    index.add_all(["*"].iter(), IndexAddOption::DEFAULT, None)?;
+    index.write()?;
+    Ok(())
+}
 
 pub fn get_staged_diff(commit_config: &CommitConfig) -> Result<String> {
     let repo = Repository::open_from_env().unwrap_or_else(|e| {
