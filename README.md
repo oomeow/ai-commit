@@ -66,6 +66,14 @@ ai-commit
 ai-commit commit
 ```
 
+Stage all current changes first, then generate and create the commit:
+
+```bash
+ai-commit --add
+# or explicitly
+ai-commit commit --add
+```
+
 Preview commit message for unstaged changes (dry-run mode):
 
 ```bash
@@ -82,6 +90,9 @@ ai-commit amend
 ### Command Options
 
 ```bash
+# Stage all changes before generating the commit message
+ai-commit --add
+
 # Show generated message without committing
 ai-commit --dry-run
 

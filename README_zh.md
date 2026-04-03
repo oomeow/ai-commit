@@ -65,6 +65,14 @@ ai-commit
 ai-commit commit
 ```
 
+先暂存当前所有变更，再生成并创建提交：
+
+```bash
+ai-commit --add
+# 或者明确指定
+ai-commit commit --add
+```
+
 为未暂存的变更预览提交信息（试运行模式）：
 
 ```bash
@@ -81,6 +89,9 @@ ai-commit amend
 ### 命令选项
 
 ```bash
+# 先暂存所有变更，再生成提交信息
+ai-commit --add
+
 # 显示生成的信息但不提交
 ai-commit --dry-run
 
