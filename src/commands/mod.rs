@@ -12,9 +12,9 @@ pub async fn execute_command(command: &str, matches: Option<&clap::ArgMatches>) 
         "install" => install::install_hook(),
         "uninstall" => uninstall::uninstall_hook(),
         "commit" => {
-            let add = matches.map(|m| m.get_flag("add")).unwrap_or(false);
-            let generate_only = matches.map(|m| m.get_flag("generate-only")).unwrap_or(false);
-            let output_file = matches.and_then(|m| m.get_one::<std::path::PathBuf>("output-file"));
+            let add = get_optional_flag(matches, "add");
+            let generate_only = get_optional_flag(matches, "generate-only");
+            let output_file = get_optional_value::<std::path::PathBuf>(matches, "output-file");
             commit::handle_commit(add, generate_only, output_file.map(|p| p.as_path())).await
         }
         "amend" => amend::handle_amend().await,
@@ -23,6 +23,17 @@ pub async fn execute_command(command: &str, matches: Option<&clap::ArgMatches>) 
         "config-edit-prompts" => config::edit_prompts_help(),
         _ => Err(anyhow::anyhow!("Unknown command: {}", command)),
     }
+}
+
+fn get_optional_flag(matches: Option<&clap::ArgMatches>, id: &str) -> bool {
+    matches.filter(|m| m.try_contains_id(id).unwrap_or(false)).map(|m| m.get_flag(id)).unwrap_or(false)
+}
+
+fn get_optional_value<'a, T: Clone + Send + Sync + 'static>(
+    matches: Option<&'a clap::ArgMatches>,
+    id: &str,
+) -> Option<&'a T> {
+    matches.filter(|m| m.try_contains_id(id).unwrap_or(false)).and_then(|m| m.try_get_one::<T>(id).ok().flatten())
 }
 
 pub fn show_confirm(title: &str) -> Result<bool> {

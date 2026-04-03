@@ -13,12 +13,23 @@ async fn main() -> Result<()> {
         .author("John")
         .subcommand_required(false)
         .arg_required_else_help(false)
+        .arg(
+            Arg::new("add")
+                .long("add")
+                .help("Stage all changes before generating the commit message")
+                .action(clap::ArgAction::SetTrue),
+        )
         .subcommand(Command::new("install").about("Install git hooks for AI commit assistance"))
         .subcommand(Command::new("uninstall").about("Remove AI commit hooks"))
         .subcommand(
             Command::new("commit")
                 .about("Generate AI commit message for staged changes")
-                .arg(Arg::new("add").long("add").help("Add all files to git").action(clap::ArgAction::SetTrue))
+                .arg(
+                    Arg::new("add")
+                        .long("add")
+                        .help("Stage all changes before generating the commit message")
+                        .action(clap::ArgAction::SetTrue),
+                )
                 .arg(
                     Arg::new("context-limit")
                         .long("context-limit")
@@ -86,6 +97,7 @@ async fn main() -> Result<()> {
             };
             execute_command(command, None).await
         }
-        _ => execute_command("commit", None).await,
+        // When no subcommand is provided, pass the top-level matches so flags like --add are honored
+        _ => execute_command("commit", Some(&matches)).await,
     }
 }

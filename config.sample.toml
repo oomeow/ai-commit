@@ -27,7 +27,7 @@ Generate concise, clear commit messages following the Conventional Commits speci
 
 Format: type(scope): description
 
-PREFERRED FORMAT: Single line under 72 characters
+PREFERRED FORMAT: Single line under 72 characters and it must start with a lowercase letter.
 Default to single line. Only use bullets for truly unrelated changes."""
 
 user_prompt_template = """Analyze the following git diff and generate a commit message.

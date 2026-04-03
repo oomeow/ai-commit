@@ -12,7 +12,7 @@ Generate concise, clear commit messages following the Conventional Commits speci
 
 Format: type(scope): description
 
-Keep the description under 72 characters for the title.
+Keep the description under 72 characters for the title and it must start with a lowercase letter.
 If needed, add a blank line and more detailed explanation.
 
 Focus on WHAT changed and WHY, not HOW."#;
