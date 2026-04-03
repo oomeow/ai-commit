@@ -8,7 +8,7 @@ use std::path::PathBuf;
 pub struct AppConfig {
     pub api: ApiConfig,
     pub commit: CommitConfig,
-    pub hooks: HookConfig,
+    // pub hooks: HookConfig,
     pub prompts: PromptConfig,
 }
 
@@ -31,11 +31,11 @@ pub struct CommitConfig {
     pub custom_ignore_patterns: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct HookConfig {
-    pub enabled: bool,
-    pub hook_types: Vec<String>,
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct HookConfig {
+//     pub enabled: bool,
+//     pub hook_types: Vec<String>,
+// }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PromptConfig {

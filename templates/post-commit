@@ -1,4 +1,5 @@
 #!/bin/bash
+# ai-commit post-commit hook
 
 # This script is executed after a commit is made.
 # It can be used to perform actions such as notifying a service, logging, or triggering other processes.

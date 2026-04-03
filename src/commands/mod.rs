@@ -7,11 +7,15 @@ pub mod config;
 pub mod install;
 pub mod uninstall;
 
-pub async fn execute_command(command: &str) -> Result<()> {
+pub async fn execute_command(command: &str, matches: Option<&clap::ArgMatches>) -> Result<()> {
     match command {
         "install" => install::install_hook(),
         "uninstall" => uninstall::uninstall_hook(),
-        "commit" => commit::handle_commit().await,
+        "commit" => {
+            let generate_only = matches.map(|m| m.get_flag("generate-only")).unwrap_or(false);
+            let output_file = matches.and_then(|m| m.get_one::<std::path::PathBuf>("output-file"));
+            commit::handle_commit(generate_only, output_file.map(|p| p.as_path())).await
+        }
         "amend" => amend::handle_amend().await,
         "config-init" => config::init_config(),
         "config-show" => config::show_config(),

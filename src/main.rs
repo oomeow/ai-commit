@@ -30,6 +30,19 @@ async fn main() -> Result<()> {
                         .long("dry-run")
                         .help("Show generated message without committing")
                         .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("generate-only")
+                        .long("generate-only")
+                        .help("Generate commit message only (no commit, no confirmation)")
+                        .action(clap::ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("output-file")
+                        .long("output-file")
+                        .value_name("FILE")
+                        .help("Write generated message to file")
+                        .value_parser(clap::value_parser!(std::path::PathBuf)),
                 ),
         )
         .subcommand(
@@ -58,19 +71,20 @@ async fn main() -> Result<()> {
         )
         .get_matches();
 
-    let command = match matches.subcommand() {
-        Some(("install", _)) => "install",
-        Some(("uninstall", _)) => "uninstall",
-        Some(("amend", _)) => "amend",
-        Some(("commit", _)) => "commit",
-        Some(("config", sub_matches)) => match sub_matches.subcommand() {
-            Some(("show", _)) => "config-show",
-            Some(("init", _)) => "config-init",
-            Some(("edit-prompts", _)) => "config-edit-prompts",
-            _ => "config-show",
-        },
-        _ => "commit",
-    };
-
-    execute_command(command).await
+    match matches.subcommand() {
+        Some(("install", _)) => execute_command("install", None).await,
+        Some(("uninstall", _)) => execute_command("uninstall", None).await,
+        Some(("amend", sub_matches)) => execute_command("amend", Some(sub_matches)).await,
+        Some(("commit", sub_matches)) => execute_command("commit", Some(sub_matches)).await,
+        Some(("config", sub_matches)) => {
+            let command = match sub_matches.subcommand() {
+                Some(("show", _)) => "config-show",
+                Some(("init", _)) => "config-init",
+                Some(("edit-prompts", _)) => "config-edit-prompts",
+                _ => "config-show",
+            };
+            execute_command(command, None).await
+        }
+        _ => execute_command("commit", None).await,
+    }
 }
