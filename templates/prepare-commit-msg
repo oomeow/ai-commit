@@ -18,8 +18,8 @@ if ! command -v ai-commit >/dev/null 2>&1; then
 fi
 
 # Generate AI commit message
-# Use --generate-only for pure message output
-if generated_msg=$(ai-commit --generate-only 2>/dev/null); then
+# Use `commit --generate-only` for pure message output
+if generated_msg=$(ai-commit commit --generate-only 2>/dev/null); then
     # Check if we got a non-empty message
     if [ -n "$generated_msg" ]; then
         # Write the generated message to the commit message file
