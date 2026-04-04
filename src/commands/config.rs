@@ -1,11 +1,11 @@
-use crate::{commands::show_confirm, config::AppConfig};
+use crate::{commands::show_confirm, config::AppConfig, dirs::get_config_file_path};
 use anyhow::Result;
 use colored::*;
 
 pub fn init_config() -> Result<()> {
     println!("{}", "🔧 Initializing AI Commit configuration...".cyan());
 
-    let config_path = AppConfig::config_path()?;
+    let config_path = get_config_file_path()?;
 
     if config_path.exists() {
         println!("{}", "⚠️  Configuration file already exists.".yellow());
@@ -22,10 +22,9 @@ pub fn init_config() -> Result<()> {
     println!("Location: {}", config_path.display().to_string().bright_blue());
     println!();
     println!("{}", "📝 Next steps:".bright_cyan().bold());
-    println!("1. Set your API key: {}", "export AI_COMMIT_ARK_API_KEY=\"your-api-key\"".yellow());
-    println!("2. View configuration: {}", "ai-commit config show".yellow());
-    println!("3. Edit prompts: Edit the [prompts] section in the config file");
-    println!("4. Start using: {}", "ai-commit".yellow());
+    println!("1. Edit API key: Edit the [api] section in the config file");
+    println!("2. Edit prompts: Edit the [prompts] section in the config file");
+    println!("3. Start using: {}", "ai-commit".yellow());
 
     Ok(())
 }
@@ -34,7 +33,7 @@ pub fn show_config() -> Result<()> {
     println!("{}", "📋 Current AI Commit Configuration".bright_cyan().bold());
     println!("{}", "═══════════════════════════════════".bright_blue());
 
-    let config_path = AppConfig::config_path()?;
+    let config_path = get_config_file_path()?;
 
     if !config_path.exists() {
         println!("{}", "❌ Configuration file not found.".red());
@@ -53,7 +52,7 @@ pub fn show_config() -> Result<()> {
 }
 
 pub fn edit_prompts_help() -> Result<()> {
-    let config_path = AppConfig::config_path()?;
+    let config_path = get_config_file_path()?;
 
     println!("{}", "✏️  How to Edit AI Prompts".bright_cyan().bold());
     println!("{}", "═══════════════════════════".bright_blue());

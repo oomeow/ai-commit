@@ -1,8 +1,10 @@
-use std::{fs, path::PathBuf};
+use std::fs;
 
 use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
+
+use crate::dirs::get_cache_file_path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CommitMsg {
@@ -35,13 +37,8 @@ pub struct Cache {
 }
 
 impl Cache {
-    pub fn cache_file_path() -> Result<PathBuf> {
-        let home = std::env::var("HOME").map_err(|_| anyhow::anyhow!("Could not find HOME directory"))?;
-        Ok(PathBuf::from(home).join(".config").join("ai-commit").join(".cache"))
-    }
-
     pub fn load() -> Result<Self> {
-        let cache_file_path = Self::cache_file_path()?;
+        let cache_file_path = get_cache_file_path()?;
         debug!("Loading cache commits message from: {}", cache_file_path.display());
         if cache_file_path.exists() {
             let cache_content = fs::read_to_string(&cache_file_path)?;
@@ -64,7 +61,7 @@ impl Cache {
     }
 
     pub fn save(&self) -> Result<()> {
-        let cache_file_path = Self::cache_file_path()?;
+        let cache_file_path = get_cache_file_path()?;
 
         if let Some(parent) = cache_file_path.parent() {
             fs::create_dir_all(parent)?;

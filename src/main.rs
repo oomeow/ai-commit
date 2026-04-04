@@ -1,16 +1,23 @@
 #![warn(clippy::style, clippy::complexity, clippy::perf, clippy::correctness)]
 
-use ai_commit::commands::execute_command;
+use ai_commit::{commands::execute_command, dirs::get_work_dir};
 use anyhow::Result;
 use clap::{Arg, Command};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::init();
+
+    // check and init work dir
+    let work_dir = get_work_dir()?;
+    if !work_dir.exists() {
+        std::fs::create_dir_all(&work_dir)?;
+    }
+
     let matches = Command::new("ai-commit")
         .version("1.0.0")
         .about("AI-assisted Git commit message generator (defaults to 'commit' if no subcommand)")
-        .author("John")
+        .author("John & oomeow")
         .subcommand_required(false)
         .arg_required_else_help(false)
         .arg(

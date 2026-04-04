@@ -2,7 +2,8 @@ use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+
+use crate::dirs::get_config_file_path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -61,7 +62,7 @@ impl AppConfig {
     }
 
     pub fn load() -> Result<Self> {
-        let config_path = Self::config_path()?;
+        let config_path = get_config_file_path()?;
         debug!("Loading configuration from: {}", config_path.display());
         if config_path.exists() {
             let config_content = fs::read_to_string(&config_path)?;
@@ -76,7 +77,7 @@ impl AppConfig {
     }
 
     pub fn save(&self) -> Result<()> {
-        let config_path = Self::config_path()?;
+        let config_path = get_config_file_path()?;
 
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent)?;
@@ -85,11 +86,6 @@ impl AppConfig {
         let config_content = toml::to_string_pretty(self)?;
         fs::write(&config_path, config_content)?;
         Ok(())
-    }
-
-    pub fn config_path() -> Result<PathBuf> {
-        let home = std::env::var("HOME").map_err(|_| anyhow::anyhow!("Could not find HOME directory"))?;
-        Ok(PathBuf::from(home).join(".config").join("ai-commit").join("config.toml"))
     }
 
     pub fn generate_user_prompt(&self, diff: &str) -> String {
