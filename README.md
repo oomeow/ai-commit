@@ -24,7 +24,7 @@ AI Commit Tool integrates with your Git workflow to automatically generate high-
 
 - Rust (latest stable version)
 - Git repository
-- AI API key (set as environment variable `AI_COMMIT_ARK_API_KEY` or `ARK_API_KEY`)
+- [Just](https://github.com/casey/just) (a handy way to save and run project-specific commands)
 
 ### Build from Source
 
@@ -42,17 +42,11 @@ cargo install --git https://github.com/oomeow/ai-commit.git
 
 ### Setup
 
-1. **Set API Key**:
+**Initialize Configuration**:
 
-   ```bash
-   export AI_COMMIT_ARK_API_KEY="your-api-key-here"
-   ```
-
-2. **Initialize Configuration**:
-
-   ```bash
-   ai-commit config init
-   ```
+```bash
+ai-commit config init
+```
 
 ## Usage
 
@@ -218,7 +212,7 @@ Prefer single-line format under 72 characters.
 Git diff:
 ```diff
 {diff}
-````
+```
 
 Provide only the commit message."""
 
@@ -260,6 +254,7 @@ feat: add user management and notification system
 ````
 
 ### Supported Types
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation only changes
@@ -272,6 +267,7 @@ feat: add user management and notification system
 ## Workflow Examples
 
 ### Initial Setup
+
 ```bash
 # One-time setup
 export AI_COMMIT_ARK_API_KEY="your-api-key"
@@ -279,7 +275,7 @@ ai-commit config init
 
 # Verify configuration
 ai-commit config show
-````
+```
 
 ### Standard Workflow
 
@@ -367,7 +363,18 @@ Contributions are welcome! Please feel free to:
 git clone <repository-url>
 cd ai-commit
 cargo test
-cargo run -- --help
+
+# debug commands, output debug logs
+# such as:
+#   ai-commit --add -> just dev --add
+#   ai-commit config show -> just dev config show
+just dev [commands]
+
+# test commands, no log output
+# such as:
+#   ai-commit --add -> just test --add
+#   ai-commit config show -> just test config show
+just test [commands]
 ```
 
 ## License

@@ -24,7 +24,7 @@ AI Commit Tool 集成到你的 Git 工作流程中，自动生成遵循 Conventi
 
 - Rust（最新稳定版本）
 - Git 仓库
-- AI API 密钥（设置为环境变量 `AI_COMMIT_ARK_API_KEY` 或 `ARK_API_KEY`）
+- [Just](https://github.com/casey/just) (一个方便的方式来保存和运行项目特定的命令)
 
 ### 从源码构建
 
@@ -42,16 +42,11 @@ cargo install --git https://github.com/oomeow/ai-commit.git
 
 ### 设置
 
-1. **设置 API 密钥**：
+**初始化配置**：
 
-   ```bash
-   export AI_COMMIT_ARK_API_KEY="your-api-key-here"
-   ```
-
-2. **初始化配置**：
-   ```bash
-   ai-commit config init
-   ```
+```bash
+ai-commit config init
+```
 
 ## 使用方法
 
@@ -217,7 +212,7 @@ user_prompt_template = """为这些变更生成提交信息。
 Git diff:
 ```diff
 {diff}
-````
+```
 
 只提供提交信息。"""
 
@@ -259,6 +254,7 @@ feat: 添加用户管理和通知系统
 ````
 
 ### 支持的类型
+
 - `feat`：新功能
 - `fix`：错误修复
 - `docs`：仅文档变更
@@ -271,14 +267,14 @@ feat: 添加用户管理和通知系统
 ## 工作流示例
 
 ### 初始设置
+
 ```bash
-# 一次性设置
-export AI_COMMIT_ARK_API_KEY="your-api-key"
+# 初始化配置
 ai-commit config init
 
 # 验证配置
 ai-commit config show
-````
+```
 
 ### 标准工作流
 
@@ -366,7 +362,18 @@ ai-commit --dry-run
 git clone <repository-url>
 cd ai-commit
 cargo test
-cargo run -- --help
+
+# 调试命令, 输出 debug 日志
+# 例如:
+#   ai-commit --add -> just dev --add
+#   ai-commit config show -> just dev config show
+just dev [命令]
+
+# 测试命令, 没有日志输出
+# 例如:
+#   ai-commit --add -> just test --add
+#   ai-commit config show -> just test config show
+just test [命令]
 ```
 
 ## 许可证
