@@ -17,6 +17,10 @@ impl CommitMsg {
     }
 
     pub fn is_expired(&self, now: u64, expiry_seconds: u64) -> bool {
+        debug!(
+            "Checking if commit message is expired: now={} timestamp={} expiry={}",
+            now, self.timestamp, expiry_seconds
+        );
         now - self.timestamp > expiry_seconds
     }
 
@@ -43,9 +47,9 @@ impl Cache {
             let cache_content = fs::read_to_string(&cache_file_path)?;
             let mut cache: Cache = toml::from_str(&cache_content)?;
 
-            // Remove expired commit messages (7 days)
-            let now =
-                std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+            // Remove expired commit messages (Default 7 days)
+            // TODO: make expiry seconds configurable
+            let now = get_now_timestamp()?;
             let expiry_seconds = 60 * 60 * 24 * 7;
             cache.commit_msgs.retain(|m| !m.is_expired(now, expiry_seconds));
             cache.save()?;
@@ -75,11 +79,14 @@ impl Cache {
         self.commit_msgs.iter().find(|&m| m.hash == hash)
     }
 
-    pub fn store_commit_message(&mut self, commit_msg: CommitMsg) {
+    pub fn store_commit_message(&mut self, commit_msg: CommitMsg) -> Result<()> {
         self.commit_msgs.push(commit_msg);
+        self.save()
     }
+}
 
-    pub fn delete_commit_message(&mut self, hash: u64) {
-        self.commit_msgs.retain(|m| m.hash != hash);
-    }
+/// Returns the current timestamp in seconds since the Unix epoch.
+pub fn get_now_timestamp() -> Result<u64> {
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs())?;
+    Ok(now)
 }

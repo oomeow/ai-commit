@@ -6,7 +6,7 @@ use std::path::Path;
 
 use crate::ai::AiClient;
 use crate::commands::show_confirm;
-use crate::config::{Cache, CommitMsg};
+use crate::config::{Cache, CommitMsg, get_now_timestamp};
 use crate::git::{add_all_files_to_git, execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
 
 pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&Path>) -> Result<()> {
@@ -63,10 +63,9 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
                 }
 
                 debug!("save commit message: {} -> {}", diff_content_hash, msg);
-                let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs();
+                let now = get_now_timestamp()?;
                 let commit_msg = CommitMsg::new(diff_content_hash, msg.clone(), now);
-                cache.store_commit_message(commit_msg);
-                cache.save()?;
+                cache.store_commit_message(commit_msg)?;
 
                 message = msg;
             }
@@ -107,8 +106,6 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
                 return Ok(());
             }
             execute_commit_with_cli(&message)?;
-            // cache.delete_commit_message(diff_content_hash);
-            // cache.save()?;
         }
     }
 
