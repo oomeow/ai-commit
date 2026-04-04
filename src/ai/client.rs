@@ -13,7 +13,7 @@ pub struct Message<'a> {
 #[derive(Serialize)]
 pub struct ChatRequest<'a> {
     model: &'a str,
-    thinking: &'a Thinking<'a>,
+    thinking: Thinking<'a>,
     messages: &'a [Message<'a>],
     max_tokens: Option<usize>,
     temperature: Option<f32>,
@@ -65,7 +65,7 @@ impl AiClient {
             messages,
             max_tokens: self.config.api.max_tokens,
             temperature: self.config.api.temperature,
-            thinking: &thinking,
+            thinking,
         };
         let response = self
             .client
