@@ -1,49 +1,36 @@
 use anyhow::Result;
 use colored::*;
-use log::debug;
+use git2::Repository;
 use std::fs;
-use std::path::Path;
 
 pub fn uninstall_hook() -> Result<()> {
     println!("Uninstalling AI-assisted Git hooks...");
 
-    // List of hook files that ai-commit might have installed
-    let hook_files = ["prepare-commit-msg"];
-    let hooks_dir = Path::new(".git/hooks");
+    let repo = Repository::open_from_env().unwrap_or_else(|e| {
+        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
+        std::process::exit(1);
+    });
+    let hooks_dir = repo.path().join("hooks");
+    let hook_path = hooks_dir.join("prepare-commit-msg");
 
-    let mut removed_count = 0;
+    if hook_path.exists() {
+        // Check if it's an ai-commit hook by looking for "ai-commit" in the content
+        let is_ai_commit_hook = match fs::read_to_string(&hook_path) {
+            Ok(content) => content.contains("ai-commit"),
+            Err(_) => false, // If we can't read it, assume it's not ours
+        };
 
-    for hook_file in &hook_files {
-        let hook_path = hooks_dir.join(hook_file);
-
-        if hook_path.exists() {
-            // Optional: check if the file is actually an ai-commit hook
-            // by checking if it contains "ai-commit" in its content
-            let is_ai_commit_hook = match fs::read_to_string(&hook_path) {
-                Ok(content) => content.contains("ai-commit"),
-                Err(_) => false, // If we can't read it, assume it's not ours
-            };
-
-            if is_ai_commit_hook {
-                fs::remove_file(&hook_path)?;
-                println!("{}", format!("✅ Removed {hook_file} hook").green());
-                removed_count += 1;
-            } else {
-                println!(
-                    "{}",
-                    format!("⚠️  {hook_file} hook exists but doesn't appear to be an ai-commit hook. Skipping.")
-                        .yellow()
-                );
-            }
+        if is_ai_commit_hook {
+            fs::remove_file(&hook_path)?;
+            println!("{}", "✅ Removed prepare-commit-msg hook".green());
         } else {
-            println!("{}", format!("ℹ️  {hook_file} hook not found. Skipping.").blue());
+            println!(
+                "{}",
+                "⚠️  prepare-commit-msg hook exists but doesn't appear to be an ai-commit hook. Skipping.".yellow()
+            );
         }
-    }
-
-    if removed_count > 0 {
-        debug!("Uninstallation complete. Removed {} hook file(s).", removed_count);
     } else {
-        debug!("No ai-commit hooks found to uninstall.");
+        println!("{}", "ℹ️  prepare-commit-msg hook not found. Skipping.".blue());
     }
 
     Ok(())
