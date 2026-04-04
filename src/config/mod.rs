@@ -3,5 +3,6 @@ mod settings;
 
 pub mod prompt;
 pub use cache::Cache;
+pub use cache::CommitMsg;
 pub use settings::AppConfig;
 pub use settings::CommitConfig;

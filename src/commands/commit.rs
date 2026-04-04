@@ -6,7 +6,7 @@ use std::path::Path;
 
 use crate::ai::AiClient;
 use crate::commands::show_confirm;
-use crate::config::Cache;
+use crate::config::{Cache, CommitMsg};
 use crate::git::{add_all_files_to_git, execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
 
 pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&Path>) -> Result<()> {
@@ -48,8 +48,8 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
     let diff_content_hash = hasher.finish();
     let mut cache = Cache::load()?;
     let mut message = if let Some(msg) = cache.get_commit_message(diff_content_hash) {
-        println!("Cache hit: {}", msg.bright_green().bold());
-        if show_confirm("Do you want to regenerate this commit message?")? { "".to_string() } else { msg }
+        println!("Cache hit: {}", msg.get_msg().bright_green().bold());
+        if show_confirm("Do you want to regenerate this commit message?")? { "".to_string() } else { msg.get_msg() }
     } else {
         "".to_string()
     };
@@ -63,7 +63,9 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
                 }
 
                 debug!("save commit message: {} -> {}", diff_content_hash, msg);
-                cache.store_commit_message(diff_content_hash, msg.clone());
+                let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs();
+                let commit_msg = CommitMsg::new(diff_content_hash, msg.clone(), now);
+                cache.store_commit_message(commit_msg);
                 cache.save()?;
 
                 message = msg;
@@ -105,8 +107,8 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
                 return Ok(());
             }
             execute_commit_with_cli(&message)?;
-            cache.delete_commit_message(diff_content_hash);
-            cache.save()?;
+            // cache.delete_commit_message(diff_content_hash);
+            // cache.save()?;
         }
     }
 
