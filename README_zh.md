@@ -148,9 +148,9 @@ dry_run_by_default = false
 ignore_lock_files = true
 custom_ignore_patterns = []
 
-[hooks]
-enabled = false
-hook_types = ["prepare-commit-msg"]
+# [hooks]
+# enabled = false
+# hook_types = ["prepare-commit-msg"]
 
 [prompts]
 system_prompt = """你是一个专业的软件开发者..."""
@@ -175,10 +175,10 @@ simple_prompt_template = """生成简洁的单行提交信息..."""
 - `ignore_lock_files`：从分析中过滤出锁文件（默认：true）
 - `custom_ignore_patterns`：要忽略的附加文件模式（默认：[]）
 
-#### 钩子设置 (`[hooks]`)
+<!--#### 钩子设置 (`[hooks]`)
 
 - `enabled`：启用 git 钩子集成（默认：false）
-- `hook_types`：要安装的 git 钩子类型（默认：["prepare-commit-msg"]）
+- `hook_types`：要安装的 git 钩子类型（默认：["prepare-commit-msg"]）-->
 
 #### 提示设置 (`[prompts]`)
 
@@ -216,9 +216,10 @@ Git diff:
 
 只提供提交信息。"""
 
-```
+````
 
 **自定义提示的技巧：**
+
 - 在模板中保留 `{diff}` 占位符
 - 使用 `ai-commit --dry-run` 测试更改
 - 配置在下次运行时自动重新加载
@@ -229,7 +230,9 @@ Git diff:
 该工具生成遵循 Conventional Commits 规范的信息：
 
 ### 单行格式（首选）
+
 用于专注的单一目的变更：
+
 ```
 
 feat: 添加用户认证系统
@@ -239,7 +242,9 @@ refactor: 改进认证模块的错误处理
 ```
 
 ### 多行格式（用于复杂变更）
+
 当存在以下情况时使用：
+
 1. **多个不相关的功能变更**（一次提交中的不同功能/修复）
 2. **单一功能的重大变更**，需要分解说明
 
@@ -251,7 +256,7 @@ feat: 添加用户管理和通知系统
 - 为用户事件添加邮件通知服务
 - 创建用户管理的管理员仪表板
 
-````
+```
 
 ### 支持的类型
 

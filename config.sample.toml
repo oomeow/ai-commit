@@ -12,6 +12,10 @@ dry_run_by_default = false
 ignore_lock_files = true
 custom_ignore_patterns = []
 
+# [hooks]
+# enabled = false
+# hook_types = ["prepare-commit-msg"]
+
 [prompts]
 system_prompt = """You are an expert software developer and git commit message writer.
 

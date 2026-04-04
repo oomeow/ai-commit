@@ -148,9 +148,9 @@ dry_run_by_default = false
 ignore_lock_files = true
 custom_ignore_patterns = []
 
-[hooks]
-enabled = false
-hook_types = ["prepare-commit-msg"]
+# [hooks]
+# enabled = false
+# hook_types = ["prepare-commit-msg"]
 
 [prompts]
 system_prompt = """You are an expert software developer..."""
@@ -175,10 +175,10 @@ simple_prompt_template = """Generate a concise single-line..."""
 - `ignore_lock_files`: Filter out lock files from analysis (default: true)
 - `custom_ignore_patterns`: Additional file patterns to ignore (default: [])
 
-#### Hook Settings (`[hooks]`)
+<!--#### Hook Settings (`[hooks]`)
 
 - `enabled`: Enable git hooks integration (default: false)
-- `hook_types`: Types of git hooks to install (default: ["prepare-commit-msg"])
+- `hook_types`: Types of git hooks to install (default: ["prepare-commit-msg"])-->
 
 #### Prompt Settings (`[prompts]`)
 
@@ -216,9 +216,10 @@ Git diff:
 
 Provide only the commit message."""
 
-```
+````
 
 **Tips for Custom Prompts:**
+
 - Keep the `{diff}` placeholder in templates
 - Test changes with `ai-commit --dry-run`
 - Configuration reloads automatically on next run
@@ -229,7 +230,9 @@ Provide only the commit message."""
 The tool generates messages following the Conventional Commits specification:
 
 ### Single-line Format (preferred)
+
 Used for focused changes with single purpose:
+
 ```
 
 feat: add user authentication system
@@ -239,7 +242,9 @@ refactor: improve error handling in auth module
 ```
 
 ### Multi-line Format (for complex changes)
+
 Used when there are:
+
 1. **Multiple unrelated functional changes** (different features/fixes in one commit)
 2. **Single feature with significant changes** that benefit from breakdown explanation
 
@@ -251,7 +256,7 @@ feat: add user management and notification system
 - Add email notification service for user events
 - Create admin dashboard for user management
 
-````
+```
 
 ### Supported Types
 
