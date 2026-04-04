@@ -13,20 +13,20 @@ pub struct Message<'a> {
 #[derive(Serialize)]
 pub struct ChatRequest<'a> {
     model: &'a str,
-    thinking: Thinking,
+    thinking: &'a Thinking<'a>,
     messages: &'a [Message<'a>],
     max_tokens: Option<usize>,
     temperature: Option<f32>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct Thinking {
-    r#type: String,
+struct Thinking<'a> {
+    r#type: &'a str,
 }
 
-impl Default for Thinking {
+impl<'a> Default for Thinking<'a> {
     fn default() -> Self {
-        Thinking { r#type: "disabled".to_string() }
+        Thinking { r#type: "disabled" }
     }
 }
 
@@ -59,12 +59,13 @@ impl AiClient {
     }
 
     pub async fn send_chat_request(&self, messages: &[Message<'_>]) -> Result<String, Box<dyn std::error::Error>> {
+        let thinking = Thinking::default();
         let request = ChatRequest {
             model: self.config.api.model.as_ref(),
             messages,
             max_tokens: self.config.api.max_tokens,
             temperature: self.config.api.temperature,
-            thinking: Thinking::default(),
+            thinking: &thinking,
         };
         let response = self
             .client
