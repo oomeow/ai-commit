@@ -14,8 +14,9 @@ async fn main() -> Result<()> {
         std::fs::create_dir_all(&work_dir)?;
     }
 
+    let version = env!("CARGO_PKG_VERSION");
     let matches = Command::new("ai-commit")
-        .version("1.0.0")
+        .version(version)
         .about("AI-assisted Git commit message generator (defaults to 'commit' if no subcommand)")
         .author("John & oomeow")
         .subcommand_required(false)
@@ -23,6 +24,7 @@ async fn main() -> Result<()> {
         .arg(
             Arg::new("add")
                 .long("add")
+                .short('a')
                 .help("Stage all changes before generating the commit message")
                 .action(clap::ArgAction::SetTrue),
         )
@@ -34,6 +36,7 @@ async fn main() -> Result<()> {
                 .arg(
                     Arg::new("add")
                         .long("add")
+                        .short('a')
                         .help("Stage all changes before generating the commit message")
                         .action(clap::ArgAction::SetTrue),
                 )
