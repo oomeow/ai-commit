@@ -121,5 +121,5 @@ pub async fn handle_amend_with_options(dry_run: bool) -> Result<()> {
 }
 
 fn confirm_amend() -> Result<bool> {
-    show_confirm("Do you want to amend the commit with this message?")
+    show_confirm("Do you want to amend the commit with this message?", true)
 }

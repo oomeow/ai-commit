@@ -10,7 +10,7 @@ pub fn init_config() -> Result<()> {
     if config_path.exists() {
         println!("{}", "⚠️  Configuration file already exists.".yellow());
         println!("Location: {}", config_path.display().to_string().bright_blue());
-        if !show_confirm("Do you want to overwrite it?")? {
+        if !show_confirm("Do you want to overwrite it?", true)? {
             println!("{}", "❌ Configuration initialization cancelled.".red());
             return Ok(());
         }

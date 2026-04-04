@@ -49,7 +49,11 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
     let mut cache = Cache::load()?;
     let mut message = if let Some(msg) = cache.get_commit_message(diff_content_hash) {
         println!("Cache hit: {}", msg.get_msg().bright_green().bold());
-        if show_confirm("Do you want to regenerate this commit message?")? { "".to_string() } else { msg.get_msg() }
+        if show_confirm("Do you want to regenerate this commit message?", false)? {
+            "".to_string()
+        } else {
+            msg.get_msg()
+        }
     } else {
         "".to_string()
     };
@@ -113,5 +117,5 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
 }
 
 fn confirm_commit() -> Result<bool> {
-    show_confirm("Do you want to commit with this message?")
+    show_confirm("Do you want to commit with this message?", true)
 }

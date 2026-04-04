@@ -36,12 +36,17 @@ fn get_optional_value<'a, T: Clone + Send + Sync + 'static>(
     matches.filter(|m| m.try_contains_id(id).unwrap_or(false)).and_then(|m| m.try_get_one::<T>(id).ok().flatten())
 }
 
-pub fn show_confirm(title: &str) -> Result<bool> {
-    print!("{title} (y/n): ");
+pub fn show_confirm(title: &str, default_yes: bool) -> Result<bool> {
+    let choices = if default_yes { "Y/n" } else { "y/N" };
+    print!("{title} ({choices}): ");
     io::stdout().flush()?;
 
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
 
-    Ok(input.trim().is_empty() || matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
+    if input.trim().is_empty() {
+        return Ok(default_yes);
+    }
+
+    Ok(matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
 }
