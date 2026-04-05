@@ -19,11 +19,9 @@ impl CommitMsg {
     }
 
     pub fn is_expired(&self, now: u64, expiry_seconds: u64) -> bool {
-        debug!(
-            "Checking if commit message is expired: now={} timestamp={} expiry={}",
-            now, self.timestamp, expiry_seconds
-        );
-        now - self.timestamp > expiry_seconds
+        let elapsed = now - self.timestamp;
+        debug!("hash: {}, elapsed seconds: {}", self.hash, elapsed);
+        elapsed > expiry_seconds
     }
 
     pub fn get_msg(&self) -> String {
