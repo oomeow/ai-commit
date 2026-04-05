@@ -55,8 +55,8 @@ impl Default for AppConfig {
 
 impl AppConfig {
     pub fn init() -> Result<()> {
-        let sample_config = fs::read_to_string("config.sample.toml")?;
-        let config: AppConfig = toml::from_str(&sample_config)?;
+        let default_config = include_str!("../../config.sample.toml");
+        let config: AppConfig = toml::from_str(default_config)?;
         config.save()?;
         Ok(())
     }
@@ -69,10 +69,10 @@ impl AppConfig {
             let config: AppConfig = toml::from_str(&config_content)?;
             Ok(config)
         } else {
-            let default_config = fs::read_to_string("config.sample.toml")?;
-            let default_config: AppConfig = toml::from_str(&default_config)?;
-            default_config.save()?;
-            Ok(default_config)
+            let default_config = include_str!("../../config.sample.toml");
+            let config: AppConfig = toml::from_str(default_config)?;
+            config.save()?;
+            Ok(config)
         }
     }
 
