@@ -47,37 +47,42 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
     diff_content.hash(&mut hasher);
     let diff_content_hash = hasher.finish();
     let mut cache = Cache::load()?;
-    let mut message = if let Some(msg) = cache.get_commit_message(diff_content_hash) {
-        println!("Cache hit: {}", msg.get_msg().bright_green().bold());
-        if show_confirm("Do you want to regenerate this commit message?", false)? {
-            "".to_string()
-        } else {
-            msg.get_msg()
-        }
-    } else {
-        "".to_string()
-    };
-
-    if message.is_empty() {
+    let generate_msg = async |cache: &mut Cache| -> Result<(String, bool)> {
         match ai_client.generate_commit_message(&diff_content).await {
             Ok(msg) => {
                 if msg.is_empty() {
                     println!("{}", "❌ AI did not generate a commit message.".red());
-                    return Ok(());
+                    return Ok((msg, true));
                 }
-
                 debug!("save commit message: {} -> {}", diff_content_hash, msg);
                 let now = get_now_timestamp()?;
                 let commit_msg = CommitMsg::new(diff_content_hash, msg.clone(), now);
                 cache.store_commit_message(commit_msg)?;
-
-                message = msg;
+                Ok((msg, false))
             }
             Err(e) => {
                 println!("{}", format!("❌ Failed to generate commit message: {e}").red());
+                Ok(("".to_string(), true))
+            }
+        }
+    };
+    let message = if let Some(cached_msg) = cache.get_commit_message(diff_content_hash) {
+        println!("Cache hit: {}", cached_msg.get_msg().bright_green().bold());
+        if show_confirm("Do you want to regenerate this commit message?", false)? {
+            let (msg, break_operation) = generate_msg(&mut cache).await?;
+            if break_operation {
                 return Ok(());
             }
-        };
+            msg
+        } else {
+            cached_msg.get_msg()
+        }
+    } else {
+        let (msg, break_operation) = generate_msg(&mut cache).await?;
+        if break_operation {
+            return Ok(());
+        }
+        msg
     };
 
     // Handle output based on parameters
