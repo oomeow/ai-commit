@@ -5,7 +5,7 @@ use std::fs;
 
 use crate::dirs::get_config_file_path;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
     pub api: ApiConfig,
     pub commit: CommitConfig,
@@ -13,7 +13,7 @@ pub struct AppConfig {
     pub prompts: PromptConfig,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiConfig {
     pub provider: String,
     pub base_url: Option<String>,
@@ -25,7 +25,7 @@ pub struct ApiConfig {
     pub context_limit: usize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommitConfig {
     pub auto_confirm: bool,
     pub dry_run_by_default: bool,
@@ -40,7 +40,7 @@ pub struct CommitConfig {
 //     pub hook_types: Vec<String>,
 // }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PromptConfig {
     pub system_prompt: String,
     pub user_prompt_template: String,
@@ -57,9 +57,13 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
-    pub fn init() -> Result<()> {
+    pub fn default_config() -> Result<Self> {
         let default_config = include_str!("../../config.sample.toml");
-        let config: AppConfig = toml::from_str(default_config)?;
+        Ok(toml::from_str(default_config)?)
+    }
+
+    pub fn init() -> Result<()> {
+        let config = Self::default_config()?;
         config.save()?;
         Ok(())
     }
@@ -74,7 +78,7 @@ impl AppConfig {
         } else {
             let default_config = include_str!("../../config.sample.toml");
             fs::write(&config_path, default_config)?;
-            let config: AppConfig = toml::from_str(default_config)?;
+            let config = Self::default_config()?;
             Ok(config)
         }
     }

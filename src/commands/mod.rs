@@ -17,7 +17,7 @@ pub async fn execute_command(command: &str, matches: Option<&clap::ArgMatches>) 
             commit::handle_commit(add, generate_only, output_file.map(|p| p.as_path())).await
         }
         "amend" => amend::handle_amend().await,
-        "config-init" => config::init_config(),
+        "config-init" => config::init_config().await,
         "config-show" => config::show_config(),
         "config-edit-prompts" => config::edit_prompts_help(),
         _ => Err(anyhow::anyhow!("Unknown command: {}", command)),

@@ -36,6 +36,11 @@ impl AiClient {
         AiClient { client, config }
     }
 
+    pub fn with_config(config: AppConfig) -> Self {
+        let client = Client::new();
+        AiClient { client, config }
+    }
+
     fn current_provider(&self) -> anyhow::Result<ProviderSpec> {
         find_provider(&self.config.api.provider)
             .ok_or_else(|| anyhow::anyhow!("Unsupported API provider: {}", self.config.api.provider))
