@@ -1,0 +1,65 @@
+#compdef ai-commit
+
+local context state line
+typeset -A opt_args
+
+_ai_commit_config_subcommands=(
+  'show:Show current configuration'
+  'init:Initialize default configuration'
+  'edit:Edit configuration in your terminal editor'
+)
+
+_ai_commit_commit_options=(
+  '(-a --add)'{-a,--add}'[Stage all changes before generating the commit message]'
+  '--context-limit[Maximum characters to send to AI]:chars:'
+  '--dry-run[Show generated message without committing]'
+  '--generate-only[Generate commit message only (no commit, no confirmation)]'
+  '--output-file[Write generated message to file]:file:_files'
+)
+
+_ai_commit_amend_options=(
+  '--context-limit[Maximum characters to send to AI]:chars:'
+  '--dry-run[Show generated message without amending]'
+)
+
+_arguments -C \
+  '(-a --add)'{-a,--add}'[Stage all changes before generating the commit message]' \
+  '1:command:->command' \
+  '*::arg:->args'
+
+case $state in
+  command)
+    _describe 'command' \
+      'commands' \
+      'install:Install git hooks for AI commit assistance' \
+      'uninstall:Remove AI commit hooks' \
+      'commit:Generate AI commit message for staged changes' \
+      'amend:Amend the last commit with staged changes using AI-generated message' \
+      'config:Manage configuration'
+    ;;
+  args)
+    case $words[2] in
+      commit)
+        _arguments "${_ai_commit_commit_options[@]}"
+        ;;
+      amend)
+        _arguments "${_ai_commit_amend_options[@]}"
+        ;;
+      config)
+        if (( CURRENT == 3 )); then
+          _describe 'config command' _ai_commit_config_subcommands
+        else
+          case $words[3] in
+            show|init|edit)
+              ;;
+          esac
+        fi
+        ;;
+      install|uninstall)
+        ;;
+      *)
+        _arguments "${_ai_commit_commit_options[@]}"
+        ;;
+    esac
+    ;;
+esac
