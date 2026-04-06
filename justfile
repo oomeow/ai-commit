@@ -1,3 +1,5 @@
+set windows-shell := ["nu", "-c"]
+
 dev *command:
     RUST_LOG=debug cargo run -- {{command}}
 
