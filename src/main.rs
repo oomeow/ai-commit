@@ -89,7 +89,7 @@ async fn main() -> Result<()> {
                 .about("Manage configuration")
                 .subcommand(Command::new("show").about("Show current configuration"))
                 .subcommand(Command::new("init").about("Initialize default configuration"))
-                .subcommand(Command::new("edit-prompts").about("Show how to edit prompt templates")),
+                .subcommand(Command::new("edit").about("Edit configuration in your terminal editor")),
         )
         .get_matches();
 
@@ -102,7 +102,7 @@ async fn main() -> Result<()> {
             let command = match sub_matches.subcommand() {
                 Some(("show", _)) => "config-show",
                 Some(("init", _)) => "config-init",
-                Some(("edit-prompts", _)) => "config-edit-prompts",
+                Some(("edit", _)) => "config-edit",
                 _ => "config-show",
             };
             execute_command(command, None).await

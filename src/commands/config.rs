@@ -6,7 +6,8 @@ use crate::{
 };
 use anyhow::Result;
 use colored::*;
-use dialoguer::{Confirm, FuzzySelect, Input, Password, Select, theme::ColorfulTheme};
+use dialoguer::{Confirm, Editor, FuzzySelect, Input, Password, Select, theme::ColorfulTheme};
+use std::fs;
 
 pub async fn init_config() -> Result<()> {
     println!("{}", "🔧 Initializing AI Commit configuration...".cyan());
@@ -58,7 +59,7 @@ pub async fn init_config() -> Result<()> {
     println!();
     println!("{}", "📝 Next steps:".bright_cyan().bold());
     println!("1. Review config: {}", "ai-commit config show".yellow());
-    println!("2. Edit prompts if needed: {}", "ai-commit config edit-prompts".yellow());
+    println!("2. Edit config if needed: {}", "ai-commit config edit".yellow());
     println!("3. Start using: {}", "ai-commit".yellow());
 
     Ok(())
@@ -118,42 +119,32 @@ pub fn show_config() -> Result<()> {
     Ok(())
 }
 
-pub fn edit_prompts_help() -> Result<()> {
+pub fn edit_config() -> Result<()> {
     let config_path = get_config_file_path()?;
 
-    println!("{}", "✏️  How to Edit AI Prompts".bright_cyan().bold());
-    println!("{}", "═══════════════════════════".bright_blue());
-    println!();
-    println!("Configuration file location:");
-    println!("{}", config_path.display().to_string().bright_blue());
-    println!();
-    println!("{}", "📝 Editable prompt sections:".bright_green().bold());
-    println!();
-    println!("{}", "[prompts.system_prompt]".yellow());
-    println!("  • Defines AI behavior and commit format preferences");
-    println!("  • Sets the overall style and rules for commit messages");
-    println!();
-    println!("{}", "[prompts.user_prompt_template]".yellow());
-    println!("  • Template for analyzing git diffs");
-    println!("  • Use {{diff}} as placeholder for the git diff content");
-    println!("  • Controls how AI analyzes changes");
-    println!();
-    println!("{}", "[prompts.simple_prompt_template]".yellow());
-    println!("  • Template for generating simple single-line messages");
-    println!("  • Use {{diff}} as placeholder");
-    println!("  • Used for straightforward changes");
-    println!();
-    println!("{}", "💡 Tips:".bright_green().bold());
-    println!("  • Test changes with: ai-commit --dry-run");
-    println!("  • Keep {{diff}} placeholder in templates");
-    println!("  • Reload happens automatically on next run");
-    println!("  • Back up your custom prompts before updates");
-
     if !config_path.exists() {
-        println!();
-        println!("{}", "⚠️  Configuration file not found.".yellow());
-        println!("Run {} to create it first.", "ai-commit config init".cyan());
+        println!("{}", "❌ Configuration file not found.".red());
+        println!("Run {} to create it.", "ai-commit config init".yellow());
+        return Ok(());
     }
+
+    let config_content = fs::read_to_string(&config_path)?;
+
+    let Some(edited_content) = Editor::new().extension("toml").edit(&config_content)? else {
+        println!("{}", "⚠️  Configuration edit cancelled.".yellow());
+        return Ok(());
+    };
+
+    if edited_content == config_content {
+        println!("{}", "ℹ️  No changes were made to the configuration.".yellow());
+        return Ok(());
+    }
+
+    let _: AppConfig = toml::from_str(&edited_content)?;
+    fs::write(&config_path, edited_content)?;
+
+    println!("{}", "✅ Configuration updated successfully!".green());
+    println!("Location: {}", config_path.display().to_string().bright_blue());
 
     Ok(())
 }

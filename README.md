@@ -107,7 +107,7 @@ ai-commit config init
 ai-commit config show
 
 # Get help with editing prompts
-ai-commit config edit-prompts
+ai-commit config edit
 ```
 
 ### Git Hooks Integration
@@ -195,7 +195,7 @@ You can fully customize how the AI generates commit messages by editing the conf
 ai-commit config show
 
 # Get help with editing prompts
-ai-commit config edit-prompts
+ai-commit config edit
 ```
 
 Edit `~/.config/ai-commit/config.toml` to customize prompts:

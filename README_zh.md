@@ -107,7 +107,7 @@ ai-commit config init
 ai-commit config show
 
 # 获取编辑提示的帮助
-ai-commit config edit-prompts
+ai-commit config edit
 ```
 
 ### Git 钩子集成
@@ -195,7 +195,7 @@ simple_prompt_template = """生成简洁的单行提交信息..."""
 ai-commit config show
 
 # 获取编辑提示的帮助
-ai-commit config edit-prompts
+ai-commit config edit
 ```
 
 编辑 `~/.config/ai-commit/config.toml` 来自定义提示：
