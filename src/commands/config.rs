@@ -28,7 +28,7 @@ pub async fn init_config() -> Result<()> {
 
     let provider_names = provider_names();
     let provider_index =
-        Select::with_theme(&theme).with_prompt("Select an AI provider").items(provider_names).default(0).interact()?;
+        Select::with_theme(&theme).with_prompt("Select an AI provider").items(&provider_names).default(0).interact()?;
     let provider_name = provider_names[provider_index];
 
     let api_key = Password::with_theme(&theme)

@@ -88,16 +88,15 @@ const OLLAMA_SPEC: ProviderSpec = ProviderSpec {
     protocol: ProtocolKind::Ollama,
 };
 
-const PROVIDER_SPECS: [ProviderSpec; 5] = [OPENAI_SPEC, OPENROUTER_SPEC, DEEPSEEK_SPEC, ZHIPU_SPEC, OLLAMA_SPEC];
-const PROVIDER_NAMES: [&str; 5] = ["openai", "openrouter", "deepseek", "zhipu", "ollama"];
+static PROVIDER_SPECS: &[ProviderSpec] = &[OPENAI_SPEC, OPENROUTER_SPEC, DEEPSEEK_SPEC, ZHIPU_SPEC, OLLAMA_SPEC];
 
 pub fn find_provider(name: &str) -> Option<ProviderSpec> {
     let normalized = name.trim().to_ascii_lowercase();
-    PROVIDER_SPECS.iter().copied().find(|spec| spec.name == normalized)
+    PROVIDER_SPECS.iter().find(|spec| spec.name == normalized).copied()
 }
 
-pub fn provider_names() -> &'static [&'static str] {
-    &PROVIDER_NAMES
+pub fn provider_names() -> Vec<&'static str> {
+    PROVIDER_SPECS.iter().map(ProviderSpec::name).collect()
 }
 
 fn join_url(base_url: &str, path: &str) -> String {
@@ -142,7 +141,7 @@ mod tests {
 
     #[test]
     fn should_return_all_provider_names() {
-        assert_eq!(provider_names(), &["openai", "openrouter", "deepseek", "zhipu", "ollama"]);
+        assert_eq!(provider_names(), vec!["openai", "openrouter", "deepseek", "zhipu", "ollama"]);
     }
 
     #[test]
