@@ -43,22 +43,22 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
     diff_content.hash(&mut hasher);
     let diff_content_hash = hasher.finish();
     let mut cache = Cache::load()?;
-    let generate_msg = async |cache: &mut Cache| -> Result<(String, bool)> {
+    let generate_msg = async |cache: &mut Cache| -> Result<String> {
         match ai_client.generate_commit_message(&diff_content).await {
             Ok(msg) => {
                 if msg.is_empty() {
                     println!("{}", "❌ AI did not generate a commit message.".red());
-                    return Ok((msg, true));
+                    std::process::exit(0);
                 }
                 debug!("save commit message: {} -> {}", diff_content_hash, msg);
                 let now = get_now_timestamp()?;
                 let commit_msg = CommitMsg::new(diff_content_hash, msg.clone(), now);
                 cache.store_commit_message(commit_msg)?;
-                Ok((msg, false))
+                Ok(msg)
             }
             Err(e) => {
                 println!("{}", format!("❌ Failed to generate commit message: {e}").red());
-                Ok(("".to_string(), true))
+                std::process::exit(0);
             }
         }
     };
@@ -68,21 +68,13 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
         } else {
             println!("Cache hit: {}", cached_msg.get_msg().bright_green().bold());
             if show_confirm("Do you want to regenerate this commit message?", false)? {
-                let (msg, break_operation) = generate_msg(&mut cache).await?;
-                if break_operation {
-                    return Ok(());
-                }
-                msg
+                generate_msg(&mut cache).await?
             } else {
                 cached_msg.get_msg()
             }
         }
     } else {
-        let (msg, break_operation) = generate_msg(&mut cache).await?;
-        if break_operation {
-            return Ok(());
-        }
-        msg
+        generate_msg(&mut cache).await?
     };
 
     // Handle output based on parameters
