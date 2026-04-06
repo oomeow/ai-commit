@@ -75,6 +75,7 @@ impl Cache {
     }
 
     pub fn store_commit_message(&mut self, commit_msg: CommitMsg) -> Result<()> {
+        self.commit_msgs.retain(|m| m.hash != commit_msg.hash);
         self.commit_msgs.push(commit_msg);
         self.save()
     }

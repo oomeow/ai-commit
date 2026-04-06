@@ -7,19 +7,30 @@ use crate::dirs::get_config_file_path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub api: ApiConfig,
+    pub provider: ProviderConfig,
     pub commit: CommitConfig,
     // pub hooks: HookConfig,
     pub prompts: PromptConfig,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ApiProvider {
+    OpenAI,
+    OpenRouter,
+    DeepSeek,
+    Zhipu,
+    Ollama,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ApiConfig {
-    pub endpoint: String,
-    pub api_key: String,
+pub struct ProviderConfig {
+    pub name: ApiProvider,
+    pub endpoint: Option<String>,
     pub model: String,
+    pub api_key: Option<String>,
     pub max_tokens: Option<usize>,
-    pub temperature: Option<f32>,
+    pub temperature: Option<f64>,
     pub context_limit: usize,
 }
 
@@ -46,7 +57,8 @@ pub struct PromptConfig {
 
 impl Default for AppConfig {
     fn default() -> Self {
-        AppConfig::load().unwrap_or_else(|_| {
+        AppConfig::load().unwrap_or_else(|e| {
+            debug!("failed to load configuration, {e}");
             eprintln!("Failed to load configuration, using default settings.");
             std::process::exit(1);
         })

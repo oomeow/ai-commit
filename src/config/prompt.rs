@@ -65,8 +65,7 @@ Examples (must follow style exactly):
 feat(auth): add oauth login support
 fix(api): handle null response error
 refactor(core): simplify task scheduler
-chore(deps): update dependencies
-"#;
+chore(deps): update dependencies "#;
 
 pub const DEFAULT_USER_PROMPT_TEMPLATE: &str = r#"Analyze the following Git diff and generate a commit message.
 
@@ -74,7 +73,8 @@ Git diff:
 ````diff
 {diff}
 ````
-"#;
+
+Provide only the commit message. "#;
 
 // pub fn get_system_prompt() -> String {
 //     let a = AppConfig::load().map(|config| config.prompts.system_prompt);

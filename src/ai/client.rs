@@ -1,8 +1,14 @@
 use log::debug;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-use crate::config::AppConfig;
+use crate::{
+    ai::{
+        OpenAI, Zhipu,
+        provider::{ApiRequestTool, DeepSeek, Ollama, OpenRouter},
+    },
+    config::{ApiProvider, AppConfig},
+};
 
 #[derive(Serialize, Debug)]
 pub struct Message<'a> {
@@ -10,39 +16,14 @@ pub struct Message<'a> {
     content: &'a str,
 }
 
-#[derive(Serialize)]
-pub struct ChatRequest<'a> {
-    model: &'a str,
-    thinking: Thinking<'a>,
-    messages: &'a [Message<'a>],
-    max_tokens: Option<usize>,
-    temperature: Option<f32>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-struct Thinking<'a> {
-    r#type: &'a str,
-}
-
-impl<'a> Default for Thinking<'a> {
-    fn default() -> Self {
-        Thinking { r#type: "disabled" }
+impl<'a> Message<'a> {
+    pub fn system(content: &'a str) -> Self {
+        Message { role: "system", content }
     }
-}
 
-#[derive(Deserialize)]
-struct ChatMessage {
-    content: String,
-}
-
-#[derive(Deserialize)]
-struct Choice {
-    message: ChatMessage,
-}
-
-#[derive(Deserialize)]
-struct ChatResponse {
-    choices: Vec<Choice>,
+    pub fn user(content: &'a str) -> Self {
+        Message { role: "user", content }
+    }
 }
 
 #[derive(Default)]
@@ -58,33 +39,30 @@ impl AiClient {
         AiClient { client, config }
     }
 
+    pub fn get_api_provider(&self) -> Option<Box<dyn ApiRequestTool>> {
+        match self.config.provider.name {
+            ApiProvider::OpenAI => Some(Box::new(OpenAI)),
+            ApiProvider::DeepSeek => Some(Box::new(DeepSeek)),
+            ApiProvider::OpenRouter => Some(Box::new(OpenRouter)),
+            ApiProvider::Zhipu => Some(Box::new(Zhipu)),
+            ApiProvider::Ollama => Some(Box::new(Ollama)),
+        }
+    }
+
     pub async fn send_chat_request(&self, messages: &[Message<'_>]) -> Result<String, Box<dyn std::error::Error>> {
-        let thinking = Thinking::default();
-        let request = ChatRequest {
-            model: self.config.api.model.as_ref(),
-            messages,
-            max_tokens: self.config.api.max_tokens,
-            temperature: self.config.api.temperature,
-            thinking,
-        };
-        let response = self
-            .client
-            .post(&self.config.api.endpoint)
-            .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", self.config.api.api_key))
-            .json(&request)
-            .send()
-            .await?;
+        let provider = self.get_api_provider().ok_or_else(|| anyhow::anyhow!("No API provider found"))?;
+        let request = provider.generate_request_body(&self.config, messages);
+        let headers = provider.headers(&self.config.provider.api_key)?;
+        let endpoint = if let Some(custom) = &self.config.provider.endpoint { custom } else { &provider.endpoint() };
+        let response = self.client.post(endpoint).headers(headers).json(&request).send().await?;
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
             return Err(format!("API request failed: {error_text}").into());
         }
 
-        let chat_response: ChatResponse = response.json().await?;
-
-        if let Some(choice) = chat_response.choices.first() {
-            Ok(choice.message.content.clone())
+        if let Some(content) = provider.parse_response(response.json().await?) {
+            Ok(content)
         } else {
             Err("No response from AI".into())
         }
@@ -92,8 +70,8 @@ impl AiClient {
 
     pub async fn generate_commit_message(&self, diff: &str) -> Result<String, Box<dyn std::error::Error>> {
         let user_prompt = self.config.generate_user_prompt(diff);
-        let system_message = Message { role: "system", content: self.config.prompts.system_prompt.as_str() };
-        let user_message = Message { role: "user", content: user_prompt.as_str() };
+        let system_message = Message::system(self.config.prompts.system_prompt.as_str());
+        let user_message = Message::user(user_prompt.as_str());
         let messages = [system_message, user_message];
         debug!("Sending messages: {messages:?}");
         self.send_chat_request(&messages).await

@@ -1,6 +1,5 @@
 use anyhow::Result;
 use git2::{DiffOptions, IndexAddOption, Repository};
-use log::debug;
 use std::str;
 
 use crate::config::CommitConfig;
@@ -69,7 +68,6 @@ fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String>
         }
         true
     })?;
-    debug!("diff content: \n{diff_content:?}");
 
     Ok(diff_content)
 }
