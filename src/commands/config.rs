@@ -24,7 +24,7 @@ pub async fn init_config() -> Result<()> {
     }
 
     let theme = ColorfulTheme::default();
-    let mut config = AppConfig::default_config()?;
+    let mut config = AppConfig::default();
 
     let provider_names = provider_names();
     let provider_index =

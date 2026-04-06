@@ -48,39 +48,29 @@ pub struct PromptConfig {
 
 impl Default for AppConfig {
     fn default() -> Self {
-        AppConfig::load().unwrap_or_else(|e| {
+        let default_config = include_str!("../../config.sample.toml");
+        let mut config: AppConfig = toml::from_str(default_config).unwrap_or_else(|e| {
             debug!("failed to load configuration, {e}");
-            eprintln!("Failed to load configuration, using default settings.");
             std::process::exit(1);
-        })
+        });
+        // remove carriage returns from prompts
+        config.prompts.system_prompt = normalize_newlines(&config.prompts.system_prompt);
+        config.prompts.user_prompt_template = normalize_newlines(&config.prompts.user_prompt_template);
+        config
     }
 }
 
 impl AppConfig {
-    pub fn default_config() -> Result<Self> {
-        let default_config = include_str!("../../config.sample.toml");
-        Ok(toml::from_str(default_config)?)
-    }
-
-    pub fn init() -> Result<()> {
-        let config = Self::default_config()?;
-        config.save()?;
-        Ok(())
-    }
-
     pub fn load() -> Result<Self> {
         let config_path = get_config_file_path()?;
         debug!("Loading configuration from: {}", config_path.display());
-        if config_path.exists() {
-            let config_content = fs::read_to_string(&config_path)?;
-            let config: AppConfig = toml::from_str(&config_content)?;
-            Ok(config)
-        } else {
-            let default_config = include_str!("../../config.sample.toml");
-            fs::write(&config_path, default_config)?;
-            let config = Self::default_config()?;
-            Ok(config)
+        if !config_path.exists() {
+            eprintln!("❌ Configuration file not found, please run `ai-commit config init` to initialize one");
+            std::process::exit(0);
         }
+        let config_content = fs::read_to_string(&config_path)?;
+        let config: AppConfig = toml::from_str(&config_content)?;
+        Ok(config)
     }
 
     pub fn save(&self) -> Result<()> {
@@ -89,7 +79,6 @@ impl AppConfig {
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent)?;
         }
-
         let config_content = toml::to_string_pretty(self)?;
         fs::write(&config_path, config_content)?;
         Ok(())
@@ -98,4 +87,8 @@ impl AppConfig {
     pub fn generate_user_prompt(&self, diff: &str) -> String {
         self.prompts.user_prompt_template.replace("{diff}", diff)
     }
+}
+
+fn normalize_newlines(s: &str) -> String {
+    s.replace("\r\n", "\n").replace('\r', "")
 }

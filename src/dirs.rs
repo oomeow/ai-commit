@@ -4,7 +4,7 @@ use anyhow::Result;
 
 pub fn get_work_dir() -> Result<PathBuf> {
     let home = dirs::home_dir().expect("Could not find HOME directory");
-    Ok(PathBuf::from(home).join(".config").join("ai-commit"))
+    Ok(home.join(".config").join("ai-commit"))
 }
 
 pub fn init_work_dir() -> Result<()> {
