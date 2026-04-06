@@ -37,13 +37,13 @@ impl AiClient {
     }
 
     fn current_provider(&self) -> anyhow::Result<ProviderSpec> {
-        find_provider(&self.config.provider.name)
-            .ok_or_else(|| anyhow::anyhow!("Unsupported API provider: {}", self.config.provider.name))
+        find_provider(&self.config.api.provider)
+            .ok_or_else(|| anyhow::anyhow!("Unsupported API provider: {}", self.config.api.provider))
     }
 
     pub async fn fetch_available_models(&self) -> anyhow::Result<Vec<String>> {
         let provider = self.current_provider()?;
-        let headers = provider.headers(&self.config.provider.api_key)?;
+        let headers = provider.headers(&self.config.api.api_key)?;
         let response = self.client.get(provider.models_url(&self.config)).headers(headers).send().await?;
 
         if !response.status().is_success() {
@@ -56,10 +56,10 @@ impl AiClient {
 
     pub async fn send_chat_request(&self, messages: &[Message<'_>]) -> anyhow::Result<String> {
         let provider = self.current_provider()?;
-        let request = provider.generate_request_body(&self.config, messages);
-        let headers = provider.headers(&self.config.provider.api_key)?;
+        let body = provider.generate_request_body(&self.config, messages);
+        let headers = provider.headers(&self.config.api.api_key)?;
         let endpoint = provider.endpoint(&self.config);
-        let response = self.client.post(endpoint).headers(headers).json(&request).send().await?;
+        let response = self.client.post(endpoint).headers(headers).json(&body).send().await?;
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
@@ -90,7 +90,7 @@ mod tests {
 
     use crate::{
         ai::provider::find_provider,
-        config::{AppConfig, CommitConfig, PromptConfig, ProviderConfig},
+        config::{ApiConfig, AppConfig, CommitConfig, PromptConfig},
     };
 
     use super::AiClient;
@@ -99,8 +99,8 @@ mod tests {
         AiClient {
             client: Client::new(),
             config: AppConfig {
-                provider: ProviderConfig {
-                    name: provider_name.to_string(),
+                api: ApiConfig {
+                    provider: provider_name.to_string(),
                     base_url: Some(base_url),
                     endpoint: None,
                     model: "test-model".to_string(),
@@ -127,9 +127,9 @@ mod tests {
     #[test]
     fn should_build_models_url_and_headers_for_openai_compatible_provider() {
         let client = build_test_client("openai", "https://api.openai.com".to_string(), Some("test-key".to_string()));
-        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let provider = find_provider(&client.config.api.provider).expect("provider should exist");
         let models_url = provider.models_url(&client.config);
-        let headers = provider.headers(&client.config.provider.api_key).expect("headers should build");
+        let headers = provider.headers(&client.config.api.api_key).expect("headers should build");
 
         assert_eq!(provider.name(), "openai");
         assert_eq!(models_url, "https://api.openai.com/v1/models");
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn should_parse_models_for_openai_compatible_provider() {
         let client = build_test_client("openai", "https://api.openai.com".to_string(), Some("test-key".to_string()));
-        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let provider = find_provider(&client.config.api.provider).expect("provider should exist");
         let response = json!({
             "data": [
                 {"id": "gpt-4o"},
@@ -155,9 +155,9 @@ mod tests {
     #[test]
     fn should_build_models_url_and_headers_for_ollama_provider() {
         let client = build_test_client("ollama", "http://localhost:11434".to_string(), None);
-        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let provider = find_provider(&client.config.api.provider).expect("provider should exist");
         let models_url = provider.models_url(&client.config);
-        let headers = provider.headers(&client.config.provider.api_key).expect("headers should build");
+        let headers = provider.headers(&client.config.api.api_key).expect("headers should build");
 
         assert_eq!(provider.name(), "ollama");
         assert_eq!(models_url, "http://localhost:11434/api/tags");
@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn should_parse_models_for_ollama_provider() {
         let client = build_test_client("ollama", "http://localhost:11434".to_string(), None);
-        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let provider = find_provider(&client.config.api.provider).expect("provider should exist");
         let response = json!({
             "models": [
                 {"name": "qwen2.5:14b"},

@@ -1,5 +1,5 @@
-[provider]
-name = "openrouter"
+[api]
+provider = "openrouter"
 api_key = "12345-678910-1122-3344-123123123123"
 model = "z-ai/glm-4.5-air:free"
 context_limit = 200000

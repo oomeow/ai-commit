@@ -7,15 +7,15 @@ use crate::dirs::get_config_file_path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub provider: ProviderConfig,
+    pub api: ApiConfig,
     pub commit: CommitConfig,
     // pub hooks: HookConfig,
     pub prompts: PromptConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ProviderConfig {
-    pub name: String,
+pub struct ApiConfig {
+    pub provider: String,
     pub base_url: Option<String>,
     pub endpoint: Option<String>,
     pub model: String,
@@ -73,8 +73,8 @@ impl AppConfig {
             Ok(config)
         } else {
             let default_config = include_str!("../../config.sample.toml");
+            fs::write(&config_path, default_config)?;
             let config: AppConfig = toml::from_str(default_config)?;
-            config.save()?;
             Ok(config)
         }
     }

@@ -23,22 +23,22 @@ impl ProtocolKind {
     pub fn build_chat_request(&self, config: &AppConfig, messages: &[Message<'_>]) -> Value {
         match self {
             Self::OpenAiCompatible => json!({
-                "model": config.provider.model,
+                "model": config.api.model,
                 "messages": messages,
                 "stream": false,
                 "thinking": {
                     "type": "disabled"
                 },
-                "max_tokens": config.provider.max_tokens,
-                "temperature": config.provider.temperature
+                "max_tokens": config.api.max_tokens,
+                "temperature": config.api.temperature
             }),
             Self::Ollama => json!({
-                "model": config.provider.model,
+                "model": config.api.model,
                 "messages": messages,
                 "think": false,
                 "stream": false,
                 "options": {
-                    "temperature": config.provider.temperature
+                    "temperature": config.api.temperature
                 }
             }),
         }

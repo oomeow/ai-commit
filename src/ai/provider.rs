@@ -24,7 +24,7 @@ impl ProviderSpec {
     }
 
     pub fn endpoint(&self, config: &AppConfig) -> String {
-        config.provider.endpoint.clone().unwrap_or_else(|| join_url(self.base_url(config), self.chat_path))
+        config.api.endpoint.clone().unwrap_or_else(|| join_url(self.base_url(config), self.chat_path))
     }
 
     pub fn models_url(&self, config: &AppConfig) -> String {
@@ -44,7 +44,7 @@ impl ProviderSpec {
     }
 
     fn base_url<'a>(&self, config: &'a AppConfig) -> &'a str {
-        config.provider.base_url.as_deref().unwrap_or(self.default_base_url)
+        config.api.base_url.as_deref().unwrap_or(self.default_base_url)
     }
 }
 
@@ -106,14 +106,14 @@ fn join_url(base_url: &str, path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::config::{AppConfig, CommitConfig, PromptConfig, ProviderConfig};
+    use crate::config::{ApiConfig, AppConfig, CommitConfig, PromptConfig};
 
     use super::{find_provider, provider_names};
 
     fn test_config() -> AppConfig {
         AppConfig {
-            provider: ProviderConfig {
-                name: "openai".to_string(),
+            api: ApiConfig {
+                provider: "openai".to_string(),
                 base_url: None,
                 endpoint: None,
                 model: "gpt-4o-mini".to_string(),
@@ -156,7 +156,7 @@ mod tests {
     #[test]
     fn should_use_custom_base_url_for_models() {
         let mut config = test_config();
-        config.provider.base_url = Some("https://example.com/custom/".to_string());
+        config.api.base_url = Some("https://example.com/custom/".to_string());
         let provider = find_provider("openai").expect("provider should exist");
 
         assert_eq!(provider.models_url(&config), "https://example.com/custom/v1/models");
