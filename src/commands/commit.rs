@@ -26,11 +26,7 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
     } else if !unstaged_diff.is_empty() {
         if !generate_only {
             println!("{}", "⚠️ No staged changes found, but found unstaged changes.".yellow());
-        }
-        if !generate_only {
             println!("{}", "Running in dry-run mode (no actual commit will be made).".yellow());
-        }
-        if !generate_only {
             println!("{}", "To commit these changes, please stage them first with 'git add'.".yellow());
         }
         (unstaged_diff, true)
@@ -67,15 +63,19 @@ pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&
         }
     };
     let message = if let Some(cached_msg) = cache.get_commit_message(diff_content_hash) {
-        println!("Cache hit: {}", cached_msg.get_msg().bright_green().bold());
-        if show_confirm("Do you want to regenerate this commit message?", false)? {
-            let (msg, break_operation) = generate_msg(&mut cache).await?;
-            if break_operation {
-                return Ok(());
-            }
-            msg
-        } else {
+        if generate_only {
             cached_msg.get_msg()
+        } else {
+            println!("Cache hit: {}", cached_msg.get_msg().bright_green().bold());
+            if show_confirm("Do you want to regenerate this commit message?", false)? {
+                let (msg, break_operation) = generate_msg(&mut cache).await?;
+                if break_operation {
+                    return Ok(());
+                }
+                msg
+            } else {
+                cached_msg.get_msg()
+            }
         }
     } else {
         let (msg, break_operation) = generate_msg(&mut cache).await?;
