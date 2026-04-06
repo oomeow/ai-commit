@@ -11,12 +11,16 @@ AI Commit Tool 集成到你的 Git 工作流程中，自动生成遵循 Conventi
 ## 功能特性
 
 - **AI 生成提交信息**：自动分析 git diff 并生成遵循常规提交格式的上下文提交信息
-- **智能格式选择**：根据变更复杂度自动选择简洁的单行信息或详细的项目符号格式
-- **试运行模式**：为未暂存的变更预览生成的信息而不提交
+- **多 Provider 支持**：内置支持 OpenAI、OpenRouter、DeepSeek、Zhipu 和 Ollama
+- **自动回退试运行**：当没有暂存内容时，会基于未暂存变更生成预览而不直接提交
 - **修订支持**：为修订之前的提交生成新信息
+- **本地消息缓存**：相同 diff 会复用已生成结果，并支持按需重新生成
 - **锁文件过滤**：自动忽略常见的锁文件（Cargo.lock、package-lock.json、yarn.lock 等）的分析
 - **GPG 签名支持**：与 GPG 签名的提交无缝协作
-- **完全可配置**：可自定义 API 设置、忽略模式、行为选项和 AI 提示
+- **交互式配置初始化**：在 `config init` 中选择 provider、输入凭据并在线拉取模型
+- **终端内编辑配置**：通过 `config edit` 直接使用终端编辑器修改配置
+- **安全安装 Git Hook**：仅安装 `prepare-commit-msg`，且不会覆盖不属于 ai-commit 的自定义 hook
+- **完全可配置**：可自定义 provider 设置、忽略模式、行为选项和 AI 提示
 
 ## 安装
 
@@ -87,14 +91,14 @@ ai-commit amend
 # 先暂存所有变更，再生成提交信息
 ai-commit --add
 
-# 显示生成的信息但不提交
-ai-commit --dry-run
+# 仅预览生成的信息而不提交
+ai-commit commit --dry-run
 
-# 限制发送给 AI 的上下文（默认：200000 字符）
-ai-commit --context-limit 100000
+# 仅输出生成的提交信息
+ai-commit commit --generate-only
 
-# 修订时使用试运行
-ai-commit amend --dry-run
+# 将生成的提交信息写入文件
+ai-commit commit --output-file .git/COMMIT_EDITMSG
 ```
 
 ### 配置命令
@@ -106,19 +110,19 @@ ai-commit config init
 # 查看当前配置
 ai-commit config show
 
-# 获取编辑提示的帮助
+# 在终端编辑器中编辑配置
 ai-commit config edit
 ```
 
 ### Git 钩子集成
 
-安装 git 钩子以获得自动提交信息协助：
+安装 `prepare-commit-msg` hook 以获得自动提交信息协助：
 
 ```bash
 ai-commit install
 ```
 
-移除 git 钩子：
+移除已安装的 `prepare-commit-msg` hook：
 
 ```bash
 ai-commit uninstall
@@ -136,8 +140,9 @@ ai-commit config init
 
 ```toml
 [api]
-endpoint = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
-model = "doubao-1-5-pro-32k-250115"
+provider = "openrouter"
+api_key = "12345-678910-1122-3344-123123123123"
+model = "z-ai/glm-4.5-air:free"
 max_tokens = 1000
 temperature = 0.7
 context_limit = 200000
@@ -153,25 +158,27 @@ custom_ignore_patterns = []
 # hook_types = ["prepare-commit-msg"]
 
 [prompts]
-system_prompt = """你是一个专业的软件开发者..."""
-user_prompt_template = """分析以下 git diff..."""
-simple_prompt_template = """生成简洁的单行提交信息..."""
+system_prompt = """You are a senior software engineer writing precise Git commit messages..."""
+user_prompt_template = """Review the following Git diff and write the best commit message..."""
 ```
 
 ### 配置选项
 
 #### API 设置 (`[api]`)
 
-- `endpoint`：AI 服务端点 URL
+- `provider`：内置 provider 名称，例如 `openai`、`openrouter`、`deepseek`、`zhipu`、`ollama`
+- `api_key`：需要鉴权的 provider 使用的 API Key
+- `base_url`：可选的基础地址覆盖项，用于拼接 chat 和 models 请求
+- `endpoint`：可选的完整 chat 接口地址覆盖项
 - `model`：用于生成的 AI 模型
 - `max_tokens`：AI 响应的最大令牌数（默认：1000）
 - `temperature`：创造性水平 0.0-1.0（默认：0.7）
-- `context_limit`：发送给 AI 的最大字符数（默认：200000）
+- `context_limit`：为后续 diff 大小限制预留的配置项
 
 #### 提交设置 (`[commit]`)
 
 - `auto_confirm`：跳过确认提示（默认：false）
-- `dry_run_by_default`：始终在试运行模式下运行（默认：false）
+- `dry_run_by_default`：预留配置项，当前命令流程尚未使用
 - `ignore_lock_files`：从分析中过滤出锁文件（默认：true）
 - `custom_ignore_patterns`：要忽略的附加文件模式（默认：[]）
 
@@ -184,17 +191,16 @@ simple_prompt_template = """生成简洁的单行提交信息..."""
 
 - `system_prompt`：定义 AI 行为的系统提示
 - `user_prompt_template`：分析 diff 的模板（使用 `{diff}` 占位符）
-- `simple_prompt_template`：简洁单行信息的模板
 
 ### 自定义 AI 提示
 
-你可以通过编辑配置文件完全自定义 AI 生成提交信息的方式：
+你可以通过直接编辑配置文件来自定义 AI 生成提交信息的方式：
 
 ```bash
 # 查看当前配置和文件位置
 ai-commit config show
 
-# 获取编辑提示的帮助
+# 在终端编辑器中打开配置文件
 ai-commit config edit
 ```
 
@@ -220,9 +226,19 @@ Git diff:
 **自定义提示的技巧：**
 
 - 在模板中保留 `{diff}` 占位符
-- 使用 `ai-commit --dry-run` 测试更改
+- 使用 `ai-commit commit --dry-run` 测试更改
 - 配置在下次运行时自动重新加载
 - 在更新前备份自定义提示
+
+### 交互式配置初始化
+
+`ai-commit config init` 现在会进入交互式流程：
+
+- 选择一个内置 provider
+- 输入该 provider 的 API Key，或对 Ollama 这类本地 provider 留空
+- 在线拉取 models，并通过分页模糊搜索选择模型
+- 如果拉取失败，可回退为手动输入 model
+- 其余配置项使用默认值保存
 
 ## 提交信息格式
 
@@ -303,19 +319,18 @@ ai-commit amend
 ```bash
 # 检查将生成什么信息而不提交
 git add .
-ai-commit --dry-run
+ai-commit commit --dry-run
 ```
 
 ### 自定义工作流
 
 ```bash
-# 编辑配置文件
-ai-commit config show  # 显示文件位置
-# 编辑 ~/.config/ai-commit/config.toml
+# 在终端编辑器中编辑配置文件
+ai-commit config edit
 
 # 测试你的更改
 git add .
-ai-commit --dry-run
+ai-commit commit --dry-run
 ```
 
 ## 技术细节
@@ -323,33 +338,34 @@ ai-commit --dry-run
 ### Diff 分析
 
 - 分析 git diff 以理解代码变更
-- 自动过滤锁文件和构建产物
-- 考虑文件类型、变更模式和修改范围
-- 支持暂存和未暂存变更分析
+- 自动过滤常见锁文件
+- 支持自定义忽略模式
+- 优先分析暂存变更，没有暂存内容时回退为未暂存预览
 
 ### AI 集成
 
 - 使用先进的语言模型生成提交信息
 - 发送上下文 diff 信息进行准确分析
-- 遵守令牌限制和上下文窗口
 - 优雅地处理 API 错误并提供回退信息
 - 支持不同提交风格的完全可自定义提示
+- 可在配置阶段从所选 provider 在线拉取 models
 
 ### 配置管理
 
 - 符合 XDG Base Directory 规范（`~/.config/ai-commit/`）
 - TOML 格式便于编辑和版本控制
-- 支持 API 密钥的环境变量
-- 如果配置缺失则回退到合理的默认值
+- 配置缺失时会自动创建默认配置
+- 通过 `config edit` 保存前会校验 TOML 格式
 - 配置变更的热重载，无需重启
+- 支持 provider 级别的 `base_url` 和 `endpoint` 覆盖
 
 ### 安全性
 
 - 与 GPG 签名的提交协作
 - 遵守 git 配置设置
 - 不在外部存储代码或敏感信息
-- 仅通过环境变量管理 API 密钥
 - 具有适当权限的本地配置文件
+- 不会覆盖非 `ai-commit` 创建的 `prepare-commit-msg` hook
 
 ## 贡献
 

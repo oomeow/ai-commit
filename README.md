@@ -11,12 +11,16 @@ AI Commit Tool integrates with your Git workflow to automatically generate high-
 ## Features
 
 - **AI-Generated Commit Messages**: Automatically analyzes git diffs and generates contextual commit messages following conventional commit format
-- **Smart Format Selection**: Automatically chooses between concise single-line messages or detailed bullet-point format based on change complexity
-- **Dry Run Mode**: Preview generated messages for unstaged changes without committing
+- **Multiple Provider Support**: Built-in support for OpenAI, OpenRouter, DeepSeek, Zhipu, and Ollama
+- **Automatic Dry-Run Fallback**: If nothing is staged, the tool previews a message from unstaged changes instead of committing
 - **Amend Support**: Generate new messages for amending previous commits with additional changes
+- **Local Message Cache**: Reuses generated messages for the same diff and lets you regenerate on demand
 - **Lock File Filtering**: Automatically ignores common lock files (Cargo.lock, package-lock.json, yarn.lock, etc.) from analysis
 - **GPG Signing Support**: Works seamlessly with GPG-signed commits
-- **Fully Configurable**: Customizable API settings, ignore patterns, behavior options, and AI prompts
+- **Interactive Config Setup**: Choose a provider, enter credentials, and fetch models during `config init`
+- **Editable Config in Terminal**: Open the config file with your terminal editor via `config edit`
+- **Safe Hook Installation**: Installs only the `prepare-commit-msg` hook and avoids overwriting unrelated custom hooks
+- **Fully Configurable**: Customizable provider settings, ignore patterns, behavior options, and AI prompts
 
 ## Installation
 
@@ -87,14 +91,14 @@ ai-commit amend
 # Stage all changes before generating the commit message
 ai-commit --add
 
-# Show generated message without committing
-ai-commit --dry-run
+# Preview a generated message without committing
+ai-commit commit --dry-run
 
-# Limit context sent to AI (default: 200000 characters)
-ai-commit --context-limit 100000
+# Print only the generated message
+ai-commit commit --generate-only
 
-# Amend with dry-run
-ai-commit amend --dry-run
+# Write the generated message to a file
+ai-commit commit --output-file .git/COMMIT_EDITMSG
 ```
 
 ### Configuration Commands
@@ -106,19 +110,19 @@ ai-commit config init
 # View current configuration
 ai-commit config show
 
-# Get help with editing prompts
+# Edit configuration in your terminal editor
 ai-commit config edit
 ```
 
 ### Git Hooks Integration
 
-Install git hooks for automatic commit message assistance:
+Install the `prepare-commit-msg` hook for automatic commit message assistance:
 
 ```bash
 ai-commit install
 ```
 
-Remove git hooks:
+Remove the installed `prepare-commit-msg` hook:
 
 ```bash
 ai-commit uninstall
@@ -136,8 +140,9 @@ ai-commit config init
 
 ```toml
 [api]
-endpoint = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
-model = "doubao-1-5-pro-32k-250115"
+provider = "openrouter"
+api_key = "12345-678910-1122-3344-123123123123"
+model = "z-ai/glm-4.5-air:free"
 max_tokens = 1000
 temperature = 0.7
 context_limit = 200000
@@ -153,25 +158,27 @@ custom_ignore_patterns = []
 # hook_types = ["prepare-commit-msg"]
 
 [prompts]
-system_prompt = """You are an expert software developer..."""
-user_prompt_template = """Analyze the following git diff..."""
-simple_prompt_template = """Generate a concise single-line..."""
+system_prompt = """You are a senior software engineer writing precise Git commit messages..."""
+user_prompt_template = """Review the following Git diff and write the best commit message..."""
 ```
 
 ### Configuration Options
 
 #### API Settings (`[api]`)
 
-- `endpoint`: AI service endpoint URL
+- `provider`: Built-in provider name such as `openai`, `openrouter`, `deepseek`, `zhipu`, or `ollama`
+- `api_key`: API key used for authenticated providers
+- `base_url`: Optional base URL override used to build chat and models requests
+- `endpoint`: Optional full chat endpoint override
 - `model`: AI model to use for generation
 - `max_tokens`: Maximum tokens for AI response (default: 1000)
 - `temperature`: Creativity level 0.0-1.0 (default: 0.7)
-- `context_limit`: Maximum characters to send to AI (default: 200000)
+- `context_limit`: Reserved configuration for future diff-size limiting
 
 #### Commit Settings (`[commit]`)
 
 - `auto_confirm`: Skip confirmation prompt (default: false)
-- `dry_run_by_default`: Always run in dry-run mode (default: false)
+- `dry_run_by_default`: Reserved configuration field, not currently applied by the command flow
 - `ignore_lock_files`: Filter out lock files from analysis (default: true)
 - `custom_ignore_patterns`: Additional file patterns to ignore (default: [])
 
@@ -184,17 +191,16 @@ simple_prompt_template = """Generate a concise single-line..."""
 
 - `system_prompt`: System prompt that defines AI behavior
 - `user_prompt_template`: Template for analyzing diffs (use `{diff}` placeholder)
-- `simple_prompt_template`: Template for simple single-line messages
 
 ### Customizing AI Prompts
 
-You can fully customize how the AI generates commit messages by editing the configuration file:
+You can fully customize how the AI generates commit messages by editing the configuration file directly:
 
 ```bash
 # View current configuration and file location
 ai-commit config show
 
-# Get help with editing prompts
+# Open the config file in your terminal editor
 ai-commit config edit
 ```
 
@@ -220,9 +226,19 @@ Git diff:
 **Tips for Custom Prompts:**
 
 - Keep the `{diff}` placeholder in templates
-- Test changes with `ai-commit --dry-run`
+- Test changes with `ai-commit commit --dry-run`
 - Configuration reloads automatically on next run
 - Back up custom prompts before updates
+
+### Interactive Configuration
+
+`ai-commit config init` now runs as an interactive setup flow:
+
+- Select one of the built-in providers
+- Enter the provider API key, or leave it empty for local providers such as Ollama
+- Fetch models online and choose one with paginated fuzzy search
+- Fall back to manual model input if model fetching fails
+- Save the rest of the settings with sensible defaults
 
 ## Commit Message Format
 
@@ -304,19 +320,18 @@ ai-commit amend
 ```bash
 # Check what message would be generated without committing
 git add .
-ai-commit --dry-run
+ai-commit commit --dry-run
 ```
 
 ### Customization Workflow
 
 ```bash
-# Edit configuration file
-ai-commit config show  # shows file location
-# Edit ~/.config/ai-commit/config.toml
+# Edit configuration file in your terminal editor
+ai-commit config edit
 
 # Test your changes
 git add .
-ai-commit --dry-run
+ai-commit commit --dry-run
 ```
 
 ## Technical Details
@@ -324,33 +339,34 @@ ai-commit --dry-run
 ### Diff Analysis
 
 - Analyzes git diffs to understand code changes
-- Filters out lock files and build artifacts automatically
-- Considers file types, change patterns, and modification scope
-- Supports both staged and unstaged change analysis
+- Filters out common lock files automatically
+- Supports custom ignore patterns
+- Prefers staged changes and falls back to unstaged changes in preview mode
 
 ### AI Integration
 
 - Uses advanced language models for commit message generation
 - Sends contextual diff information for accurate analysis
-- Respects token limits and context windows
 - Handles API errors gracefully with fallback messages
 - Supports fully customizable prompts for different commit styles
+- Can fetch available models from the selected provider during configuration
 
 ### Configuration Management
 
 - XDG Base Directory specification compliant (`~/.config/ai-commit/`)
 - TOML format for easy editing and version control
-- Environment variable support for API keys
-- Fallback to sensible defaults if configuration is missing
+- Creates a default config automatically when missing
+- Validates edited TOML before saving through `config edit`
 - Hot-reload of configuration changes without restart
+- Supports provider-level `base_url` and `endpoint` overrides
 
 ### Security
 
 - Works with GPG-signed commits
 - Respects git configuration settings
 - No code or sensitive information stored externally
-- API keys managed through environment variables only
 - Local configuration files with proper permissions
+- Will not overwrite non-`ai-commit` `prepare-commit-msg` hooks
 
 ## Contributing
 
