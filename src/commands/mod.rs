@@ -1,6 +1,5 @@
-use std::io::{self, Write};
-
 use anyhow::Result;
+use dialoguer::{Confirm, theme::ColorfulTheme};
 pub mod amend;
 pub mod commit;
 pub mod config;
@@ -37,16 +36,5 @@ fn get_optional_value<'a, T: Clone + Send + Sync + 'static>(
 }
 
 pub fn show_confirm(title: &str, default_yes: bool) -> Result<bool> {
-    let choices = if default_yes { "Y/n" } else { "y/N" };
-    print!("{title} ({choices}): ");
-    io::stdout().flush()?;
-
-    let mut input = String::new();
-    io::stdin().read_line(&mut input)?;
-
-    if input.trim().is_empty() {
-        return Ok(default_yes);
-    }
-
-    Ok(matches!(input.trim().to_lowercase().as_str(), "y" | "yes"))
+    Ok(Confirm::with_theme(&ColorfulTheme::default()).with_prompt(title).default(default_yes).interact()?)
 }
