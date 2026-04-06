@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 pub fn get_work_dir() -> Result<PathBuf> {
-    let home = std::env::var("HOME").map_err(|_| anyhow::anyhow!("Could not find HOME directory"))?;
+    let home = dirs::home_dir().expect("Could not find HOME directory");
     Ok(PathBuf::from(home).join(".config").join("ai-commit"))
 }
 
