@@ -38,7 +38,8 @@ impl ProtocolKind {
                 "think": false,
                 "stream": false,
                 "options": {
-                    "temperature": config.api.temperature
+                    "temperature": config.api.temperature,
+                    "num_predict": config.api.max_tokens
                 }
             }),
         }
