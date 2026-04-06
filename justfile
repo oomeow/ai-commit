@@ -7,7 +7,7 @@ test *command:
 completion:
     cargo run -- completion zsh > ./completions/zsh/_ai-commit
     cargo run -- completion bash > ./completions/bash/_ai-commit
-    cargo run -- completion fish > ./completions/fish/_ai-commit
+    cargo run -- completion fish > ./completions/fish/ai-commit.fish
 
 build:
     cargo build -r
