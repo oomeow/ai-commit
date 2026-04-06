@@ -114,6 +114,13 @@ ai-commit config show
 ai-commit config edit
 ```
 
+### Shell Completion
+
+```bash
+# Generate zsh completion from the current clap command tree
+ai-commit completion zsh > _ai-commit
+```
+
 ### Git Hooks Integration
 
 Install the `prepare-commit-msg` hook for automatic commit message assistance:
@@ -126,6 +133,18 @@ Remove the installed `prepare-commit-msg` hook:
 
 ```bash
 ai-commit uninstall
+```
+
+### Zsh Installation
+
+```bash
+# Generate the completion file
+ai-commit completion zsh > ~/.zsh/completions/_ai-commit
+
+# Load the directory from your fpath, then refresh completions
+fpath=(~/.zsh/completions $fpath)
+autoload -Uz compinit
+compinit
 ```
 
 ## Configuration

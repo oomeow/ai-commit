@@ -114,6 +114,13 @@ ai-commit config show
 ai-commit config edit
 ```
 
+### Shell 补全
+
+```bash
+# 基于当前 clap 命令树生成 zsh 补全脚本
+ai-commit completion zsh > _ai-commit
+```
+
 ### Git 钩子集成
 
 安装 `prepare-commit-msg` hook 以获得自动提交信息协助：
@@ -126,6 +133,18 @@ ai-commit install
 
 ```bash
 ai-commit uninstall
+```
+
+### Zsh 安装
+
+```bash
+# 生成补全文件到 ~/.zsh/completions/_ai-commit
+ai-commit completion zsh > ~/.zsh/completions/_ai-commit
+
+# 将目录加入 fpath 并刷新补全
+fpath=(~/.zsh/completions $fpath)
+autoload -Uz compinit
+compinit
 ```
 
 ## 配置

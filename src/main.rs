@@ -3,6 +3,7 @@
 use ai_commit::{commands::execute_command, dirs::get_work_dir};
 use anyhow::Result;
 use clap::{Arg, Command};
+use clap_complete::{Shell, generate};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -14,8 +15,36 @@ async fn main() -> Result<()> {
         std::fs::create_dir_all(&work_dir)?;
     }
 
+    let matches = build_cli().get_matches();
+
+    match matches.subcommand() {
+        Some(("completion", sub_matches)) => {
+            let shell = *sub_matches.get_one::<Shell>("shell").expect("shell is required");
+            let mut command = build_cli();
+            generate(shell, &mut command, "ai-commit", &mut std::io::stdout());
+            Ok(())
+        }
+        Some(("install", _)) => execute_command("install", None).await,
+        Some(("uninstall", _)) => execute_command("uninstall", None).await,
+        Some(("amend", sub_matches)) => execute_command("amend", Some(sub_matches)).await,
+        Some(("commit", sub_matches)) => execute_command("commit", Some(sub_matches)).await,
+        Some(("config", sub_matches)) => {
+            let command = match sub_matches.subcommand() {
+                Some(("show", _)) => "config-show",
+                Some(("init", _)) => "config-init",
+                Some(("edit", _)) => "config-edit",
+                _ => "config-show",
+            };
+            execute_command(command, None).await
+        }
+        // When no subcommand is provided, pass the top-level matches so flags like --add are honored
+        _ => execute_command("commit", Some(&matches)).await,
+    }
+}
+
+fn build_cli() -> Command {
     let version = env!("CARGO_PKG_VERSION");
-    let matches = Command::new("ai-commit")
+    Command::new("ai-commit")
         .version(version)
         .about("AI-assisted Git commit message generator (defaults to 'commit' if no subcommand)")
         .author("John & oomeow")
@@ -30,6 +59,15 @@ async fn main() -> Result<()> {
         )
         .subcommand(Command::new("install").about("Install git hooks for AI commit assistance"))
         .subcommand(Command::new("uninstall").about("Remove AI commit hooks"))
+        .subcommand(
+            Command::new("completion").about("Generate shell completion script").arg(
+                Arg::new("shell")
+                    .value_name("SHELL")
+                    .help("Shell to generate completions for")
+                    .required(true)
+                    .value_parser(clap::value_parser!(Shell)),
+            ),
+        )
         .subcommand(
             Command::new("commit")
                 .about("Generate AI commit message for staged changes")
@@ -91,23 +129,4 @@ async fn main() -> Result<()> {
                 .subcommand(Command::new("init").about("Initialize default configuration"))
                 .subcommand(Command::new("edit").about("Edit configuration in your terminal editor")),
         )
-        .get_matches();
-
-    match matches.subcommand() {
-        Some(("install", _)) => execute_command("install", None).await,
-        Some(("uninstall", _)) => execute_command("uninstall", None).await,
-        Some(("amend", sub_matches)) => execute_command("amend", Some(sub_matches)).await,
-        Some(("commit", sub_matches)) => execute_command("commit", Some(sub_matches)).await,
-        Some(("config", sub_matches)) => {
-            let command = match sub_matches.subcommand() {
-                Some(("show", _)) => "config-show",
-                Some(("init", _)) => "config-init",
-                Some(("edit", _)) => "config-edit",
-                _ => "config-show",
-            };
-            execute_command(command, None).await
-        }
-        // When no subcommand is provided, pass the top-level matches so flags like --add are honored
-        _ => execute_command("commit", Some(&matches)).await,
-    }
 }

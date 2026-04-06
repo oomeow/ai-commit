@@ -1,65 +1,379 @@
 #compdef ai-commit
 
-local context state line
-typeset -A opt_args
+autoload -U is-at-least
 
-_ai_commit_config_subcommands=(
-  'show:Show current configuration'
-  'init:Initialize default configuration'
-  'edit:Edit configuration in your terminal editor'
-)
+_ai-commit() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
 
-_ai_commit_commit_options=(
-  '(-a --add)'{-a,--add}'[Stage all changes before generating the commit message]'
-  '--context-limit[Maximum characters to send to AI]:chars:'
-  '--dry-run[Show generated message without committing]'
-  '--generate-only[Generate commit message only (no commit, no confirmation)]'
-  '--output-file[Write generated message to file]:file:_files'
-)
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
 
-_ai_commit_amend_options=(
-  '--context-limit[Maximum characters to send to AI]:chars:'
-  '--dry-run[Show generated message without amending]'
-)
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" : \
+'-a[Stage all changes before generating the commit message]' \
+'--add[Stage all changes before generating the commit message]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'-V[Print version]' \
+'--version[Print version]' \
+":: :_ai-commit_commands" \
+"*::: :->ai-commit" \
+&& ret=0
+    case $state in
+    (ai-commit)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:ai-commit-command-$line[1]:"
+        case $line[1] in
+            (install)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(uninstall)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(completion)
+_arguments "${_arguments_options[@]}" : \
+'--install[Install the generated completion script to the default location for the shell]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':shell -- Shell to generate completions for:(bash elvish fish powershell zsh)' \
+&& ret=0
+;;
+(commit)
+_arguments "${_arguments_options[@]}" : \
+'--context-limit=[Maximum characters to send to AI (default\: 200000)]:CHARS:_default' \
+'--output-file=[Write generated message to file]:FILE:_files' \
+'-a[Stage all changes before generating the commit message]' \
+'--add[Stage all changes before generating the commit message]' \
+'--dry-run[Show generated message without committing]' \
+'--generate-only[Generate commit message only (no commit, no confirmation)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(amend)
+_arguments "${_arguments_options[@]}" : \
+'--context-limit=[Maximum characters to send to AI (default\: 200000)]:CHARS:_default' \
+'--dry-run[Show generated message without amending]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(config)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_ai-commit__config_commands" \
+"*::: :->config" \
+&& ret=0
 
-_arguments -C \
-  '(-a --add)'{-a,--add}'[Stage all changes before generating the commit message]' \
-  '1:command:->command' \
-  '*::arg:->args'
+    case $state in
+    (config)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:ai-commit-config-command-$line[1]:"
+        case $line[1] in
+            (show)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(init)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(edit)
+_arguments "${_arguments_options[@]}" : \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_ai-commit__config__help_commands" \
+"*::: :->help" \
+&& ret=0
 
-case $state in
-  command)
-    _describe 'command' \
-      'commands' \
-      'install:Install git hooks for AI commit assistance' \
-      'uninstall:Remove AI commit hooks' \
-      'commit:Generate AI commit message for staged changes' \
-      'amend:Amend the last commit with staged changes using AI-generated message' \
-      'config:Manage configuration'
-    ;;
-  args)
-    case $words[2] in
-      commit)
-        _arguments "${_ai_commit_commit_options[@]}"
-        ;;
-      amend)
-        _arguments "${_ai_commit_amend_options[@]}"
-        ;;
-      config)
-        if (( CURRENT == 3 )); then
-          _describe 'config command' _ai_commit_config_subcommands
-        else
-          case $words[3] in
-            show|init|edit)
-              ;;
-          esac
-        fi
-        ;;
-      install|uninstall)
-        ;;
-      *)
-        _arguments "${_ai_commit_commit_options[@]}"
-        ;;
-    esac
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:ai-commit-config-help-command-$line[1]:"
+        case $line[1] in
+            (show)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(edit)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
     ;;
 esac
+;;
+        esac
+    ;;
+esac
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+":: :_ai-commit__help_commands" \
+"*::: :->help" \
+&& ret=0
+
+    case $state in
+    (help)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:ai-commit-help-command-$line[1]:"
+        case $line[1] in
+            (install)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(uninstall)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(completion)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(commit)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(amend)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(config)
+_arguments "${_arguments_options[@]}" : \
+":: :_ai-commit__help__config_commands" \
+"*::: :->config" \
+&& ret=0
+
+    case $state in
+    (config)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:ai-commit-help-config-command-$line[1]:"
+        case $line[1] in
+            (show)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(init)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+(edit)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(help)
+_arguments "${_arguments_options[@]}" : \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_ai-commit_commands] )) ||
+_ai-commit_commands() {
+    local commands; commands=(
+'install:Install git hooks for AI commit assistance' \
+'uninstall:Remove AI commit hooks' \
+'completion:Generate shell completion script' \
+'commit:Generate AI commit message for staged changes' \
+'amend:Amend the last commit with staged changes using AI-generated message' \
+'config:Manage configuration' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'ai-commit commands' commands "$@"
+}
+(( $+functions[_ai-commit__amend_commands] )) ||
+_ai-commit__amend_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit amend commands' commands "$@"
+}
+(( $+functions[_ai-commit__commit_commands] )) ||
+_ai-commit__commit_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit commit commands' commands "$@"
+}
+(( $+functions[_ai-commit__completion_commands] )) ||
+_ai-commit__completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit completion commands' commands "$@"
+}
+(( $+functions[_ai-commit__config_commands] )) ||
+_ai-commit__config_commands() {
+    local commands; commands=(
+'show:Show current configuration' \
+'init:Initialize default configuration' \
+'edit:Edit configuration in your terminal editor' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'ai-commit config commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__edit_commands] )) ||
+_ai-commit__config__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit config edit commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__help_commands] )) ||
+_ai-commit__config__help_commands() {
+    local commands; commands=(
+'show:Show current configuration' \
+'init:Initialize default configuration' \
+'edit:Edit configuration in your terminal editor' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'ai-commit config help commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__help__edit_commands] )) ||
+_ai-commit__config__help__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit config help edit commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__help__help_commands] )) ||
+_ai-commit__config__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit config help help commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__help__init_commands] )) ||
+_ai-commit__config__help__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit config help init commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__help__show_commands] )) ||
+_ai-commit__config__help__show_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit config help show commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__init_commands] )) ||
+_ai-commit__config__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit config init commands' commands "$@"
+}
+(( $+functions[_ai-commit__config__show_commands] )) ||
+_ai-commit__config__show_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit config show commands' commands "$@"
+}
+(( $+functions[_ai-commit__help_commands] )) ||
+_ai-commit__help_commands() {
+    local commands; commands=(
+'install:Install git hooks for AI commit assistance' \
+'uninstall:Remove AI commit hooks' \
+'completion:Generate shell completion script' \
+'commit:Generate AI commit message for staged changes' \
+'amend:Amend the last commit with staged changes using AI-generated message' \
+'config:Manage configuration' \
+'help:Print this message or the help of the given subcommand(s)' \
+    )
+    _describe -t commands 'ai-commit help commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__amend_commands] )) ||
+_ai-commit__help__amend_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help amend commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__commit_commands] )) ||
+_ai-commit__help__commit_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help commit commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__completion_commands] )) ||
+_ai-commit__help__completion_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help completion commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__config_commands] )) ||
+_ai-commit__help__config_commands() {
+    local commands; commands=(
+'show:Show current configuration' \
+'init:Initialize default configuration' \
+'edit:Edit configuration in your terminal editor' \
+    )
+    _describe -t commands 'ai-commit help config commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__config__edit_commands] )) ||
+_ai-commit__help__config__edit_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help config edit commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__config__init_commands] )) ||
+_ai-commit__help__config__init_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help config init commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__config__show_commands] )) ||
+_ai-commit__help__config__show_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help config show commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__help_commands] )) ||
+_ai-commit__help__help_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help help commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__install_commands] )) ||
+_ai-commit__help__install_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help install commands' commands "$@"
+}
+(( $+functions[_ai-commit__help__uninstall_commands] )) ||
+_ai-commit__help__uninstall_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit help uninstall commands' commands "$@"
+}
+(( $+functions[_ai-commit__install_commands] )) ||
+_ai-commit__install_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit install commands' commands "$@"
+}
+(( $+functions[_ai-commit__uninstall_commands] )) ||
+_ai-commit__uninstall_commands() {
+    local commands; commands=()
+    _describe -t commands 'ai-commit uninstall commands' commands "$@"
+}
+
+if [ "$funcstack[1]" = "_ai-commit" ]; then
+    _ai-commit "$@"
+else
+    compdef _ai-commit ai-commit
+fi
