@@ -4,6 +4,11 @@ dev *command:
 test *command:
     cargo run -- {{command}}
 
+completion:
+    cargo run -- completion zsh > ./completions/zsh/_ai-commit
+    cargo run -- completion bash > ./completions/bash/_ai-commit
+    cargo run -- completion fish > ./completions/fish/_ai-commit
+
 build:
     cargo build -r
     # cp target/release/ai-commit ~/.bin/ai-commit

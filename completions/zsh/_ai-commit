@@ -44,7 +44,6 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (completion)
 _arguments "${_arguments_options[@]}" : \
-'--install[Install the generated completion script to the default location for the shell]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':shell -- Shell to generate completions for:(bash elvish fish powershell zsh)' \
