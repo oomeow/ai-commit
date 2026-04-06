@@ -3,11 +3,8 @@ use reqwest::Client;
 use serde::Serialize;
 
 use crate::{
-    ai::{
-        OpenAI, Zhipu,
-        provider::{ApiRequestTool, DeepSeek, Ollama, OpenRouter},
-    },
-    config::{ApiProvider, AppConfig},
+    ai::provider::{ProviderSpec, find_provider},
+    config::AppConfig,
 };
 
 #[derive(Serialize, Debug)]
@@ -39,41 +36,147 @@ impl AiClient {
         AiClient { client, config }
     }
 
-    pub fn get_api_provider(&self) -> Option<Box<dyn ApiRequestTool>> {
-        match self.config.provider.name {
-            ApiProvider::OpenAI => Some(Box::new(OpenAI)),
-            ApiProvider::DeepSeek => Some(Box::new(DeepSeek)),
-            ApiProvider::OpenRouter => Some(Box::new(OpenRouter)),
-            ApiProvider::Zhipu => Some(Box::new(Zhipu)),
-            ApiProvider::Ollama => Some(Box::new(Ollama)),
-        }
+    fn current_provider(&self) -> anyhow::Result<ProviderSpec> {
+        find_provider(&self.config.provider.name)
+            .ok_or_else(|| anyhow::anyhow!("Unsupported API provider: {}", self.config.provider.name))
     }
 
-    pub async fn send_chat_request(&self, messages: &[Message<'_>]) -> Result<String, Box<dyn std::error::Error>> {
-        let provider = self.get_api_provider().ok_or_else(|| anyhow::anyhow!("No API provider found"))?;
+    pub async fn fetch_available_models(&self) -> anyhow::Result<Vec<String>> {
+        let provider = self.current_provider()?;
+        let headers = provider.headers(&self.config.provider.api_key)?;
+        let response = self.client.get(provider.models_url(&self.config)).headers(headers).send().await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            return Err(anyhow::anyhow!("Fetch models failed: {error_text}"));
+        }
+
+        Ok(provider.parse_models_response(response.json().await?))
+    }
+
+    pub async fn send_chat_request(&self, messages: &[Message<'_>]) -> anyhow::Result<String> {
+        let provider = self.current_provider()?;
         let request = provider.generate_request_body(&self.config, messages);
         let headers = provider.headers(&self.config.provider.api_key)?;
-        let endpoint = if let Some(custom) = &self.config.provider.endpoint { custom } else { &provider.endpoint() };
+        let endpoint = provider.endpoint(&self.config);
         let response = self.client.post(endpoint).headers(headers).json(&request).send().await?;
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
-            return Err(format!("API request failed: {error_text}").into());
+            return Err(anyhow::anyhow!("API request failed: {error_text}"));
         }
 
         if let Some(content) = provider.parse_response(response.json().await?) {
             Ok(content)
         } else {
-            Err("No response from AI".into())
+            Err(anyhow::anyhow!("No response from AI"))
         }
     }
 
-    pub async fn generate_commit_message(&self, diff: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn generate_commit_message(&self, diff: &str) -> anyhow::Result<String> {
         let user_prompt = self.config.generate_user_prompt(diff);
         let system_message = Message::system(self.config.prompts.system_prompt.as_str());
         let user_message = Message::user(user_prompt.as_str());
         let messages = [system_message, user_message];
         debug!("Sending messages: {messages:?}");
         self.send_chat_request(&messages).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use reqwest::Client;
+    use serde_json::json;
+
+    use crate::{
+        ai::provider::find_provider,
+        config::{AppConfig, CommitConfig, PromptConfig, ProviderConfig},
+    };
+
+    use super::AiClient;
+
+    fn build_test_client(provider_name: &str, base_url: String, api_key: Option<String>) -> AiClient {
+        AiClient {
+            client: Client::new(),
+            config: AppConfig {
+                provider: ProviderConfig {
+                    name: provider_name.to_string(),
+                    base_url: Some(base_url),
+                    endpoint: None,
+                    model: "test-model".to_string(),
+                    api_key,
+                    max_tokens: Some(1000),
+                    temperature: Some(0.7),
+                    context_limit: 200000,
+                },
+                commit: CommitConfig {
+                    auto_confirm: false,
+                    dry_run_by_default: false,
+                    gpg_sign: None,
+                    ignore_lock_files: true,
+                    custom_ignore_patterns: vec![],
+                },
+                prompts: PromptConfig {
+                    system_prompt: "system".to_string(),
+                    user_prompt_template: "{diff}".to_string(),
+                },
+            },
+        }
+    }
+
+    #[test]
+    fn should_build_models_url_and_headers_for_openai_compatible_provider() {
+        let client = build_test_client("openai", "https://api.openai.com".to_string(), Some("test-key".to_string()));
+        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let models_url = provider.models_url(&client.config);
+        let headers = provider.headers(&client.config.provider.api_key).expect("headers should build");
+
+        assert_eq!(provider.name(), "openai");
+        assert_eq!(models_url, "https://api.openai.com/v1/models");
+        assert_eq!(headers.get("authorization").and_then(|value| value.to_str().ok()), Some("Bearer test-key"));
+    }
+
+    #[test]
+    fn should_parse_models_for_openai_compatible_provider() {
+        let client = build_test_client("openai", "https://api.openai.com".to_string(), Some("test-key".to_string()));
+        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let response = json!({
+            "data": [
+                {"id": "gpt-4o"},
+                {"id": "gpt-4.1-mini"}
+            ]
+        });
+
+        let models = provider.parse_models_response(response);
+
+        assert_eq!(models, vec!["gpt-4o".to_string(), "gpt-4.1-mini".to_string()]);
+    }
+
+    #[test]
+    fn should_build_models_url_and_headers_for_ollama_provider() {
+        let client = build_test_client("ollama", "http://localhost:11434".to_string(), None);
+        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let models_url = provider.models_url(&client.config);
+        let headers = provider.headers(&client.config.provider.api_key).expect("headers should build");
+
+        assert_eq!(provider.name(), "ollama");
+        assert_eq!(models_url, "http://localhost:11434/api/tags");
+        assert!(headers.get("authorization").is_none());
+    }
+
+    #[test]
+    fn should_parse_models_for_ollama_provider() {
+        let client = build_test_client("ollama", "http://localhost:11434".to_string(), None);
+        let provider = find_provider(&client.config.provider.name).expect("provider should exist");
+        let response = json!({
+            "models": [
+                {"name": "qwen2.5:14b"},
+                {"name": "deepseek-r1:14b"}
+            ]
+        });
+
+        let models = provider.parse_models_response(response);
+
+        assert_eq!(models, vec!["qwen2.5:14b".to_string(), "deepseek-r1:14b".to_string()]);
     }
 }

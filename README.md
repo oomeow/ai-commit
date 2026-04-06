@@ -202,19 +202,18 @@ Edit `~/.config/ai-commit/config.toml` to customize prompts:
 
 ````toml
 [prompts]
-system_prompt = """You are a senior developer focused on clear, concise commits.
-Generate conventional commit messages prioritizing single-line format.
-Use bullet points only for truly unrelated changes."""
+system_prompt = """You are a senior software engineer writing precise Git commit messages.
+You MUST follow Conventional Commits.
+Output only the final commit message."""
 
-user_prompt_template = """Generate a commit message for these changes.
-Prefer single-line format under 72 characters.
+user_prompt_template = """Review the following Git diff and write the best commit message.
+Return only the commit message.
+Prefer a single-line Conventional Commit.
 
 Git diff:
 ```diff
 {diff}
-```
-
-Provide only the commit message."""
+```"""
 
 ````
 

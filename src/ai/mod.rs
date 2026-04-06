@@ -1,4 +1,5 @@
 mod client;
+mod protocol;
 mod provider;
 
 pub use client::*;

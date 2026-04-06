@@ -13,19 +13,10 @@ pub struct AppConfig {
     pub prompts: PromptConfig,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ApiProvider {
-    OpenAI,
-    OpenRouter,
-    DeepSeek,
-    Zhipu,
-    Ollama,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProviderConfig {
-    pub name: ApiProvider,
+    pub name: String,
+    pub base_url: Option<String>,
     pub endpoint: Option<String>,
     pub model: String,
     pub api_key: Option<String>,

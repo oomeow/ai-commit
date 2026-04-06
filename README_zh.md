@@ -202,19 +202,18 @@ ai-commit config edit-prompts
 
 ````toml
 [prompts]
-system_prompt = """你是一个专注于清晰、简洁提交的高级开发者。
-生成优先使用单行格式的常规提交信息。
-只有在真正不相关的变更时才使用项目符号。"""
+system_prompt = """You are a senior software engineer writing precise Git commit messages.
+You MUST follow Conventional Commits.
+Output only the final commit message."""
 
-user_prompt_template = """为这些变更生成提交信息。
-优先使用 72 字符以内的单行格式。
+user_prompt_template = """Review the following Git diff and write the best commit message.
+Return only the commit message.
+Prefer a single-line Conventional Commit.
 
 Git diff:
 ```diff
 {diff}
-```
-
-只提供提交信息。"""
+```"""
 
 ````
 
