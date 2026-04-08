@@ -23,9 +23,6 @@ async fn main() -> Result<()> {
     if matches.args_present() {
         // 只解析 --config 参数
         custom_config = get_optional_value::<PathBuf>(Some(&matches), "config");
-        if let Some(config_path) = custom_config {
-            println!("{},exists {}", config_path.display(), config_path.exists());
-        }
     }
 
     match matches.subcommand() {
