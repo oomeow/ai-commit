@@ -7,12 +7,17 @@ use crate::{
 use anyhow::Result;
 use colored::*;
 use dialoguer::{Confirm, Editor, FuzzySelect, Input, Password, Select, theme::ColorfulTheme};
-use std::fs;
+use std::{fs, path::PathBuf};
 
-pub async fn init_config() -> Result<()> {
+pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
     println!("{}", "🔧 Initializing AI Commit configuration...".cyan());
 
-    let config_path = get_config_file_path()?;
+    let (config_path, mut config) = if let Some(path) = custom_config_file {
+        (path.clone(), AppConfig::load_from_path(path)?)
+    } else {
+        let path = get_config_file_path()?;
+        (path, AppConfig::default())
+    };
 
     if config_path.exists() {
         println!("{}", "⚠️  Configuration file already exists.".yellow());
@@ -24,7 +29,6 @@ pub async fn init_config() -> Result<()> {
     }
 
     let theme = ColorfulTheme::default();
-    let mut config = AppConfig::default();
 
     let provider_names = provider_names();
     let provider_index =
@@ -52,7 +56,7 @@ pub async fn init_config() -> Result<()> {
         return Ok(());
     }
 
-    config.save()?;
+    config.save(&config_path)?;
 
     println!("{}", "✅ Configuration file created successfully!".green());
     println!("Location: {}", config_path.display().to_string().bright_blue());
@@ -97,11 +101,11 @@ fn prompt_model_fallback(theme: &ColorfulTheme, reason: &str) -> Result<String> 
     Ok(Input::with_theme(theme).with_prompt("Enter model name").interact_text()?)
 }
 
-pub fn show_config() -> Result<()> {
+pub fn show_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
     println!("{}", "📋 Current AI Commit Configuration".bright_cyan().bold());
     println!("{}", "═══════════════════════════════════".bright_blue());
 
-    let config_path = get_config_file_path()?;
+    let config_path = if let Some(path) = custom_config_file { path.to_path_buf() } else { get_config_file_path()? };
 
     if !config_path.exists() {
         println!("{}", "❌ Configuration file not found.".red());
@@ -109,7 +113,7 @@ pub fn show_config() -> Result<()> {
         return Ok(());
     }
 
-    let config = AppConfig::load()?;
+    let config = AppConfig::load_from_path(&config_path)?;
     let config_content = toml::to_string_pretty(&config)?;
 
     println!("File location: {}", config_path.display().to_string().bright_blue());
@@ -119,8 +123,8 @@ pub fn show_config() -> Result<()> {
     Ok(())
 }
 
-pub fn edit_config() -> Result<()> {
-    let config_path = get_config_file_path()?;
+pub fn edit_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
+    let config_path = if let Some(path) = custom_config_file { path.to_path_buf() } else { get_config_file_path()? };
 
     if !config_path.exists() {
         println!("{}", "❌ Configuration file not found.".red());

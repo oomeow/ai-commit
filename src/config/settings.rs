@@ -1,7 +1,10 @@
 use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use crate::dirs::get_config_file_path;
 
@@ -73,14 +76,18 @@ impl AppConfig {
         Ok(config)
     }
 
-    pub fn save(&self) -> Result<()> {
-        let config_path = get_config_file_path()?;
+    pub fn load_from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let config_content = fs::read_to_string(path)?;
+        let config: AppConfig = toml::from_str(&config_content)?;
+        Ok(config)
+    }
 
+    pub fn save(&self, config_path: &PathBuf) -> Result<()> {
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent)?;
         }
         let config_content = toml::to_string_pretty(self)?;
-        fs::write(&config_path, config_content)?;
+        fs::write(config_path, config_content)?;
         Ok(())
     }
 

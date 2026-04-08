@@ -4,3 +4,4 @@ pub mod config;
 pub mod dirs;
 pub mod git;
 pub mod hooks;
+pub mod utils;

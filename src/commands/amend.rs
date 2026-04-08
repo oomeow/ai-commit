@@ -1,12 +1,20 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use colored::*;
 
 use crate::ai::AiClient;
 use crate::commands::show_confirm;
+use crate::config::AppConfig;
 use crate::git::{execute_amend_with_cli, get_amend_diff, get_last_commit_message, get_staged_diff};
 
-pub async fn handle_amend() -> Result<()> {
-    let ai_client = AiClient::new();
+pub async fn handle_amend(custom_config: Option<&PathBuf>) -> Result<()> {
+    let ai_client = if let Some(config_path) = custom_config {
+        let config = AppConfig::load_from_path(config_path)?;
+        AiClient::with_config(config)
+    } else {
+        AiClient::new()
+    };
 
     // 检查是否有staged changes或者需要amend
     let staged_diff = get_staged_diff(&ai_client.config.commit)?;

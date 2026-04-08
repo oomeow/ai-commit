@@ -1,10 +1,9 @@
 [api]
-provider = "openrouter"
-api_key = "12345-678910-1122-3344-123123123123"
-model = "z-ai/glm-4.5-air:free"
-context_limit = 200000
+provider = "ollama"
+model = "qwen3.5:4b"
 max_tokens = 1000
 temperature = 0.7
+context_limit = 200000
 
 [commit]
 auto_confirm = false
@@ -12,12 +11,9 @@ dry_run_by_default = false
 ignore_lock_files = true
 custom_ignore_patterns = []
 
-# [hooks]
-# enabled = false
-# hook_types = ["prepare-commit-msg"]
-
 [prompts]
-system_prompt = """You are a senior software engineer writing precise Git commit messages.
+system_prompt = '''
+You are a senior software engineer writing precise Git commit messages.
 
 You MUST follow Conventional Commits.
 
@@ -58,16 +54,16 @@ Decision rules:
 
 Validation:
 - The first line must match:
-  ^(feat|fix|docs|style|refactor|perf|test|chore)(\\([^)]+\\))?!?: .+
+  ^(feat|fix|docs|style|refactor|perf|test|chore)(\([^)]+\))?!?: .+
 - If the result does not match, correct it before responding
 
 Examples:
 feat(auth): add oauth login support
 fix(api): handle null response error
 refactor(core): simplify task scheduler
-chore(deps): update dependencies"""
-
-user_prompt_template = """Review the following Git diff and write the best commit message.
+chore(deps): update dependencies'''
+user_prompt_template = """
+Review the following Git diff and write the best commit message.
 
 Git diff:
 ````diff

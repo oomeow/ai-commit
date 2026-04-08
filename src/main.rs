@@ -1,6 +1,8 @@
 #![warn(clippy::style, clippy::complexity, clippy::perf, clippy::correctness)]
 
-use ai_commit::{commands::execute_command, dirs::get_work_dir};
+use std::path::PathBuf;
+
+use ai_commit::{commands::execute_command, dirs::get_work_dir, utils::get_optional_value};
 use anyhow::Result;
 use clap::{Arg, Command};
 use clap_complete::{Shell, generate};
@@ -17,6 +19,15 @@ async fn main() -> Result<()> {
 
     let matches = build_cli().get_matches();
 
+    let mut custom_config: Option<&PathBuf> = None;
+    if matches.args_present() {
+        // 只解析 --config 参数
+        custom_config = get_optional_value::<PathBuf>(Some(&matches), "config");
+        if let Some(config_path) = custom_config {
+            println!("{},exists {}", config_path.display(), config_path.exists());
+        }
+    }
+
     match matches.subcommand() {
         Some(("completion", sub_matches)) => {
             let shell = *sub_matches.get_one::<Shell>("shell").expect("shell is required");
@@ -24,10 +35,10 @@ async fn main() -> Result<()> {
             generate(shell, &mut command, "ai-commit", &mut std::io::stdout());
             Ok(())
         }
-        Some(("install", _)) => execute_command("install", None).await,
-        Some(("uninstall", _)) => execute_command("uninstall", None).await,
-        Some(("amend", sub_matches)) => execute_command("amend", Some(sub_matches)).await,
-        Some(("commit", sub_matches)) => execute_command("commit", Some(sub_matches)).await,
+        Some(("install", _)) => execute_command("install", None, custom_config).await,
+        Some(("uninstall", _)) => execute_command("uninstall", None, custom_config).await,
+        Some(("amend", sub_matches)) => execute_command("amend", Some(sub_matches), custom_config).await,
+        Some(("commit", sub_matches)) => execute_command("commit", Some(sub_matches), custom_config).await,
         Some(("config", sub_matches)) => {
             let command = match sub_matches.subcommand() {
                 Some(("show", _)) => "config-show",
@@ -35,10 +46,10 @@ async fn main() -> Result<()> {
                 Some(("edit", _)) => "config-edit",
                 _ => "config-show",
             };
-            execute_command(command, None).await
+            execute_command(command, Some(sub_matches), custom_config).await
         }
         // When no subcommand is provided, pass the top-level matches so flags like --add are honored
-        _ => execute_command("commit", Some(&matches)).await,
+        _ => execute_command("commit", Some(&matches), custom_config).await,
     }
 }
 
@@ -56,6 +67,14 @@ fn build_cli() -> Command {
                 .short('a')
                 .help("Stage all changes before generating the commit message")
                 .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("config")
+                .long("config")
+                .short('f')
+                .value_name("FILE")
+                .help("Use a custom config file")
+                .value_parser(clap::value_parser!(std::path::PathBuf)),
         )
         .subcommand(Command::new("install").about("Install git hooks for AI commit assistance"))
         .subcommand(Command::new("uninstall").about("Remove AI commit hooks"))

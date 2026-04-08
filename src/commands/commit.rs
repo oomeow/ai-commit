@@ -2,15 +2,25 @@ use anyhow::Result;
 use colored::*;
 use log::debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::path::Path;
+use std::path::PathBuf;
 
 use crate::ai::AiClient;
 use crate::commands::show_confirm;
-use crate::config::{Cache, CommitMsg, get_now_timestamp};
+use crate::config::{AppConfig, Cache, CommitMsg, get_now_timestamp};
 use crate::git::{add_all_files_to_git, execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
 
-pub async fn handle_commit(add: bool, generate_only: bool, output_file: Option<&Path>) -> Result<()> {
-    let ai_client = AiClient::new();
+pub async fn handle_commit(
+    add: bool,
+    generate_only: bool,
+    custom_config_file: Option<&PathBuf>,
+    output_file: Option<&PathBuf>,
+) -> Result<()> {
+    let ai_client = if let Some(config_path) = custom_config_file {
+        let config = AppConfig::load_from_path(config_path)?;
+        AiClient::with_config(config)
+    } else {
+        AiClient::new()
+    };
 
     if add {
         add_all_files_to_git()?;

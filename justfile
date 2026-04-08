@@ -1,10 +1,10 @@
 set windows-shell := ["nu", "-c"]
 
 dev *command:
-    RUST_LOG=debug,prek=off cargo run -- {{command}}
+    RUST_LOG=debug,prek=off cargo run -- -f ./config.dev.toml {{command}}
 
 test *command:
-    cargo run -- {{command}}
+    cargo run -- -f ./config.dev.toml {{command}}
 
 completion:
     cargo run -- completion zsh > ./completions/zsh/_ai-commit
