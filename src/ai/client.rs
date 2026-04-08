@@ -10,7 +10,7 @@ use crate::{
 #[derive(Serialize, Debug)]
 pub struct Message<'a> {
     role: &'a str,
-    content: &'a str,
+    pub content: &'a str,
 }
 
 impl<'a> Message<'a> {
@@ -59,9 +59,9 @@ impl AiClient {
         Ok(provider.parse_models_response(response.json().await?))
     }
 
-    pub async fn send_chat_request(&self, messages: &[Message<'_>]) -> anyhow::Result<String> {
+    pub async fn send_chat_request(&self, system_msg: &Message<'_>, user_msg: &Message<'_>) -> anyhow::Result<String> {
         let provider = self.current_provider()?;
-        let body = provider.generate_request_body(&self.config, messages);
+        let body = provider.generate_request_body(&self.config, system_msg, user_msg);
         let headers = provider.headers(&self.config.api.api_key)?;
         let endpoint = provider.endpoint(&self.config);
         let response = self.client.post(endpoint).headers(headers).json(&body).send().await?;
@@ -82,9 +82,9 @@ impl AiClient {
         let user_prompt = self.config.generate_user_prompt(diff);
         let system_message = Message::system(self.config.prompts.system_prompt.as_str());
         let user_message = Message::user(user_prompt.as_str());
-        let messages = [system_message, user_message];
-        debug!("Sending messages: {messages:?}");
-        self.send_chat_request(&messages).await
+        debug!("Sending system messages: {system_message:?}");
+        debug!("Sending user messages: {user_message:?}");
+        self.send_chat_request(&system_message, &user_message).await
     }
 }
 

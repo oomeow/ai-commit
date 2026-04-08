@@ -31,8 +31,8 @@ impl ProviderSpec {
         join_url(self.base_url(config), self.models_path)
     }
 
-    pub fn generate_request_body(&self, config: &AppConfig, messages: &[Message<'_>]) -> Value {
-        self.protocol.build_chat_request(config, messages)
+    pub fn generate_request_body(&self, config: &AppConfig, system_msg: &Message<'_>, user_msg: &Message<'_>) -> Value {
+        self.protocol.build_chat_request(config, system_msg, user_msg)
     }
 
     pub fn parse_response(&self, response: Value) -> Option<String> {
@@ -88,7 +88,16 @@ const OLLAMA_SPEC: ProviderSpec = ProviderSpec {
     protocol: ProtocolKind::Ollama,
 };
 
-static PROVIDER_SPECS: &[ProviderSpec] = &[OPENAI_SPEC, OPENROUTER_SPEC, DEEPSEEK_SPEC, ZHIPU_SPEC, OLLAMA_SPEC];
+const LMSTUDIO_SPEC: ProviderSpec = ProviderSpec {
+    name: "lmstudio",
+    default_base_url: "http://localhost:1234",
+    chat_path: "/api/v1/chat",
+    models_path: "/api/v1/models",
+    protocol: ProtocolKind::LMStudio,
+};
+
+static PROVIDER_SPECS: &[ProviderSpec] =
+    &[OPENAI_SPEC, OPENROUTER_SPEC, DEEPSEEK_SPEC, ZHIPU_SPEC, OLLAMA_SPEC, LMSTUDIO_SPEC];
 
 pub fn find_provider(name: &str) -> Option<ProviderSpec> {
     let normalized = name.trim().to_ascii_lowercase();

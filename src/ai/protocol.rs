@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::debug;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderValue};
 use serde_json::{Value, json};
 
@@ -8,6 +9,7 @@ use crate::{ai::Message, config::AppConfig};
 pub enum ProtocolKind {
     OpenAiCompatible,
     Ollama,
+    LMStudio,
 }
 
 impl ProtocolKind {
@@ -20,11 +22,11 @@ impl ProtocolKind {
         Ok(headers)
     }
 
-    pub fn build_chat_request(&self, config: &AppConfig, messages: &[Message<'_>]) -> Value {
+    pub fn build_chat_request(&self, config: &AppConfig, system_msg: &Message, user_msg: &Message) -> Value {
         match self {
             Self::OpenAiCompatible => json!({
                 "model": config.api.model,
-                "messages": messages,
+                "messages": [system_msg, user_msg],
                 "stream": false,
                 "thinking": {
                     "type": "disabled"
@@ -34,7 +36,7 @@ impl ProtocolKind {
             }),
             Self::Ollama => json!({
                 "model": config.api.model,
-                "messages": messages,
+                "messages": [system_msg, user_msg],
                 "think": false,
                 "stream": false,
                 "options": {
@@ -42,10 +44,21 @@ impl ProtocolKind {
                     "num_predict": config.api.max_tokens
                 }
             }),
+            Self::LMStudio => json!({
+                "model": config.api.model,
+                "system_prompt": system_msg.content,
+                "input": user_msg.content,
+                "stream": false,
+                // Will error if the model being used does not support the reasoning setting using.
+                "reasoning": "off",
+                "temperature": config.api.temperature,
+                "max_output_tokens": config.api.max_tokens
+            }),
         }
     }
 
     pub fn parse_chat_response(&self, response: Value) -> Option<String> {
+        debug!("{:#?}", response);
         match self {
             Self::OpenAiCompatible => response["choices"]
                 .as_array()
@@ -55,10 +68,16 @@ impl ProtocolKind {
             Self::Ollama => {
                 response["message"].as_object().and_then(|message| message["content"].as_str()).map(str::to_owned)
             }
+            Self::LMStudio => response["output"]
+                .as_array()
+                .and_then(|arr| arr.first())
+                .and_then(|choice| choice["content"].as_str())
+                .map(str::to_owned),
         }
     }
 
     pub fn parse_models_response(&self, response: Value) -> Vec<String> {
+        debug!("{:#?}", response);
         match self {
             Self::OpenAiCompatible => response["data"]
                 .as_array()
@@ -71,6 +90,12 @@ impl ProtocolKind {
                 .into_iter()
                 .flatten()
                 .filter_map(|model| model["name"].as_str().map(str::to_owned))
+                .collect(),
+            Self::LMStudio => response["models"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|model| model["key"].as_str().map(str::to_owned))
                 .collect(),
         }
     }
