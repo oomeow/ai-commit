@@ -1,13 +1,18 @@
+use std::{
+    hash::{DefaultHasher, Hash, Hasher},
+    path::PathBuf,
+};
+
 use anyhow::Result;
 use colored::*;
 use log::debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::path::PathBuf;
 
-use crate::ai::AiClient;
-use crate::commands::show_confirm;
-use crate::config::{AppConfig, Cache, CommitMsg, get_now_timestamp};
-use crate::git::{add_all_files_to_git, execute_commit_with_cli, get_staged_diff, get_unstaged_diff};
+use crate::{
+    ai::AiClient,
+    commands::show_confirm,
+    config::{AppConfig, Cache, CommitMsg, get_now_timestamp},
+    git::{add_all_files_to_git, execute_commit_with_cli, get_staged_diff, get_unstaged_diff},
+};
 
 pub async fn handle_commit(
     add: bool,

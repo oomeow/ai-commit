@@ -1,7 +1,8 @@
+use std::fs;
+
 use anyhow::Result;
 use colored::*;
 use git2::Repository;
-use std::fs;
 
 pub fn uninstall_hook() -> Result<()> {
     println!("Uninstalling AI-assisted Git hooks...");

@@ -3,10 +3,12 @@ use std::path::PathBuf;
 use anyhow::Result;
 use colored::*;
 
-use crate::ai::AiClient;
-use crate::commands::show_confirm;
-use crate::config::AppConfig;
-use crate::git::{execute_amend_with_cli, get_amend_diff, get_last_commit_message, get_staged_diff};
+use crate::{
+    ai::AiClient,
+    commands::show_confirm,
+    config::AppConfig,
+    git::{execute_amend_with_cli, get_amend_diff, get_last_commit_message, get_staged_diff},
+};
 
 pub async fn handle_amend(custom_config: Option<&PathBuf>) -> Result<()> {
     let ai_client = if let Some(config_path) = custom_config {

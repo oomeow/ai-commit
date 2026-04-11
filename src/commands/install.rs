@@ -1,7 +1,8 @@
+use std::fs;
+
 use anyhow::{Context, Result, anyhow};
 use colored::*;
 use git2::Repository;
-use std::fs;
 
 pub fn install_hook() -> Result<()> {
     println!("Installing AI-assisted Git hooks...");

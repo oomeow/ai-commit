@@ -1,13 +1,15 @@
+use std::{fs, path::PathBuf};
+
+use anyhow::Result;
+use colored::*;
+use dialoguer::{Confirm, Editor, FuzzySelect, Input, Password, Select, theme::ColorfulTheme};
+
 use crate::{
     ai::{AiClient, provider_names},
     commands::show_confirm,
     config::AppConfig,
     dirs::get_config_file_path,
 };
-use anyhow::Result;
-use colored::*;
-use dialoguer::{Confirm, Editor, FuzzySelect, Input, Password, Select, theme::ColorfulTheme};
-use std::{fs, path::PathBuf};
 
 pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
     println!("{}", "🔧 Initializing AI Commit configuration...".cyan());

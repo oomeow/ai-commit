@@ -1,10 +1,11 @@
-use anyhow::Result;
-use log::debug;
-use serde::{Deserialize, Serialize};
 use std::{
     fs,
     path::{Path, PathBuf},
 };
+
+use anyhow::Result;
+use log::debug;
+use serde::{Deserialize, Serialize};
 
 use crate::dirs::get_config_file_path;
 

@@ -1,5 +1,6 @@
-use anyhow::Result;
 use std::process::Command;
+
+use anyhow::Result;
 
 pub fn execute_commit_with_cli(message: &str) -> Result<()> {
     println!("🚀 Committing changes...");

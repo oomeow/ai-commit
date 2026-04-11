@@ -93,12 +93,11 @@ mod tests {
     use reqwest::Client;
     use serde_json::json;
 
+    use super::AiClient;
     use crate::{
         ai::provider::find_provider,
         config::{ApiConfig, AppConfig, CommitConfig, PromptConfig},
     };
-
-    use super::AiClient;
 
     fn build_test_client(provider_name: &str, base_url: String, api_key: Option<String>) -> AiClient {
         AiClient {

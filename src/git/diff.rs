@@ -1,6 +1,7 @@
+use std::str;
+
 use anyhow::Result;
 use git2::{DiffOptions, IndexAddOption, Repository};
-use std::str;
 
 use crate::config::CommitConfig;
 

@@ -114,9 +114,8 @@ fn join_url(base_url: &str, path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::config::{ApiConfig, AppConfig, CommitConfig, PromptConfig};
-
     use super::{find_provider, provider_names};
+    use crate::config::{ApiConfig, AppConfig, CommitConfig, PromptConfig};
 
     fn test_config() -> AppConfig {
         AppConfig {

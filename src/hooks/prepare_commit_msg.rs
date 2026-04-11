@@ -1,6 +1,5 @@
 // filepath: /ai-commit/ai-commit/src/hooks/prepare_commit_msg.rs
-use std::env;
-use std::fs;
+use std::{env, fs};
 
 pub fn prepare_commit_msg() {
     let commit_msg_file = env::args().nth(1).expect("No commit message file provided");
