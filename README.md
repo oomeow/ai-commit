@@ -11,6 +11,7 @@ AI Commit Tool integrates with your Git workflow to automatically generate high-
 ## Features
 
 - **AI-Generated Commit Messages**: Automatically analyzes git diffs and generates contextual commit messages following conventional commit format
+- **Edit Before Confirming**: Review the AI result, open it in your terminal editor, and fine-tune the message before the final commit prompt
 - **Multiple Provider Support**: Built-in support for OpenAI, OpenRouter, DeepSeek, Zhipu, and Ollama
 - **Automatic Dry-Run Fallback**: If nothing is staged, the tool previews a message from unstaged changes instead of committing
 - **Amend Support**: Generate new messages for amending previous commits with additional changes
@@ -63,6 +64,12 @@ ai-commit
 # or explicitly
 ai-commit commit
 ```
+
+Default interactive flow for staged changes:
+
+1. AI generates a commit message
+2. You can choose whether to open the message in your terminal editor
+3. You confirm whether to create the commit with the final message
 
 Stage all current changes first, then generate and create the commit:
 
