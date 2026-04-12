@@ -18,8 +18,8 @@ repos:
 
   - repo: local
     hooks:
-      - id: generate-commit-message
-        name: Generate commit message
+      - id: generate-completions
+        name: Generate completions
         entry: just completion
         language: system
         pass_filenames: false
