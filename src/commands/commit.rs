@@ -122,11 +122,14 @@ pub async fn handle_commit(
                 if confirm_edit_message()?
                     && let Some(edited) = Editor::new().edit(&message)?
                 {
-                    message = edited;
+                    message = edited.clone();
                     println!("{}", "✍️ Edited commit message:".bright_cyan().bold());
                     println!("{}", "─────────────────────".bright_blue());
                     println!("{}", message.bright_green().bold());
                     println!("{}", "─────────────────────".bright_blue());
+                    let now = get_now_timestamp()?;
+                    let commit_msg = CommitMsg::new(diff_content_hash, edited, now);
+                    cache.store_commit_message(commit_msg)?;
                 }
                 if !confirm_commit()? {
                     println!("{}", "❌ Commit cancelled.".red());
