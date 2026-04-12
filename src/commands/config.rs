@@ -6,7 +6,7 @@ use dialoguer::{Confirm, Editor, FuzzySelect, Input, Password, Select, theme::Co
 
 use crate::{
     ai::{AiClient, provider_names},
-    commands::show_confirm,
+    commands::{THEME, show_confirm},
     config::AppConfig,
     dirs::get_config_file_path,
 };
@@ -30,14 +30,14 @@ pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
         }
     }
 
-    let theme = ColorfulTheme::default();
+    let theme = &*THEME;
 
     let provider_names = provider_names();
     let provider_index =
-        Select::with_theme(&theme).with_prompt("Select an AI provider").items(&provider_names).default(0).interact()?;
+        Select::with_theme(theme).with_prompt("Select an AI provider").items(&provider_names).default(0).interact()?;
     let provider_name = provider_names[provider_index];
 
-    let api_key = Password::with_theme(&theme)
+    let api_key = Password::with_theme(theme)
         .with_prompt(format!("Enter API key for {provider_name}"))
         .allow_empty_password(true)
         .interact()?;
@@ -45,7 +45,7 @@ pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
     config.api.provider = provider_name.to_string();
     config.api.api_key = if api_key.is_empty() { None } else { Some(api_key) };
 
-    config.api.model = select_model(&theme, &config).await?;
+    config.api.model = select_model(theme, &config).await?;
 
     println!();
     println!("{}", "Configuration preview:".bright_cyan().bold());
@@ -53,7 +53,7 @@ pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
     println!("Model: {}", config.api.model.bright_green());
     println!("Config file: {}", config_path.display().to_string().bright_blue());
 
-    if !Confirm::with_theme(&theme).with_prompt("Save this configuration?").default(true).interact()? {
+    if !Confirm::with_theme(theme).with_prompt("Save this configuration?").default(true).interact()? {
         println!("{}", "❌ Configuration initialization cancelled.".red());
         return Ok(());
     }

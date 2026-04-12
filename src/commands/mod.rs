@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::LazyLock};
 
 use anyhow::Result;
 use dialoguer::{Confirm, theme::ColorfulTheme};
@@ -9,6 +9,8 @@ pub mod commit;
 pub mod config;
 pub mod install;
 pub mod uninstall;
+
+pub static THEME: LazyLock<ColorfulTheme> = LazyLock::new(ColorfulTheme::default);
 
 pub async fn execute_command(
     command: &str,
@@ -33,5 +35,5 @@ pub async fn execute_command(
 }
 
 pub fn show_confirm(title: &str, default_yes: bool) -> Result<bool> {
-    Ok(Confirm::with_theme(&ColorfulTheme::default()).with_prompt(title).default(default_yes).interact()?)
+    Ok(Confirm::with_theme(&*THEME).with_prompt(title).default(default_yes).interact()?)
 }
