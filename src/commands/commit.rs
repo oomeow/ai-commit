@@ -5,6 +5,7 @@ use std::{
 
 use anyhow::Result;
 use colored::*;
+use dialoguer::Editor;
 use log::debug;
 
 use crate::{
@@ -77,7 +78,7 @@ pub async fn handle_commit(
             }
         }
     };
-    let message = if let Some(cached_msg) = cache.get_commit_message(diff_content_hash) {
+    let mut message = if let Some(cached_msg) = cache.get_commit_message(diff_content_hash) {
         if generate_only {
             cached_msg.get_msg()
         } else {
@@ -117,15 +118,30 @@ pub async fn handle_commit(
         } else {
             // Only ask for confirmation if not in generate-only mode
             // (generate-only is handled above, but keep this for safety)
-            if !ai_client.config.commit.auto_confirm && !confirm_commit()? {
-                println!("{}", "❌ Commit cancelled.".red());
-                return Ok(());
+            if !ai_client.config.commit.auto_confirm {
+                if confirm_edit_message()?
+                    && let Some(edited) = Editor::new().edit(&message)?
+                {
+                    message = edited;
+                    println!("{}", "✍️ Edited commit message:".bright_cyan().bold());
+                    println!("{}", "─────────────────────".bright_blue());
+                    println!("{}", message.bright_green().bold());
+                    println!("{}", "─────────────────────".bright_blue());
+                }
+                if !confirm_commit()? {
+                    println!("{}", "❌ Commit cancelled.".red());
+                    return Ok(());
+                }
+                execute_commit_with_cli(&message)?;
             }
-            execute_commit_with_cli(&message)?;
         }
     }
 
     Ok(())
+}
+
+fn confirm_edit_message() -> Result<bool> {
+    show_confirm("Do you want to edit the commit message?", false)
 }
 
 fn confirm_commit() -> Result<bool> {
