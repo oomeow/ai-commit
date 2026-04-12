@@ -60,7 +60,6 @@ fn build_cli() -> Command {
         .arg_required_else_help(false)
         .arg(
             Arg::new("add")
-                .long("add")
                 .short('a')
                 .help("Stage all changes before generating the commit message")
                 .action(clap::ArgAction::SetTrue),
