@@ -17,79 +17,79 @@ _ai-commit() {
                 cmd="ai__commit"
                 ;;
             ai__commit,amend)
-                cmd="ai__commit__amend"
+                cmd="ai__commit__subcmd__amend"
                 ;;
             ai__commit,commit)
-                cmd="ai__commit__commit"
+                cmd="ai__commit__subcmd__commit"
                 ;;
             ai__commit,completion)
-                cmd="ai__commit__completion"
+                cmd="ai__commit__subcmd__completion"
                 ;;
             ai__commit,config)
-                cmd="ai__commit__config"
+                cmd="ai__commit__subcmd__config"
                 ;;
             ai__commit,help)
-                cmd="ai__commit__help"
+                cmd="ai__commit__subcmd__help"
                 ;;
             ai__commit,install)
-                cmd="ai__commit__install"
+                cmd="ai__commit__subcmd__install"
                 ;;
             ai__commit,uninstall)
-                cmd="ai__commit__uninstall"
+                cmd="ai__commit__subcmd__uninstall"
                 ;;
-            ai__commit__config,edit)
-                cmd="ai__commit__config__edit"
+            ai__commit__subcmd__config,edit)
+                cmd="ai__commit__subcmd__config__subcmd__edit"
                 ;;
-            ai__commit__config,help)
-                cmd="ai__commit__config__help"
+            ai__commit__subcmd__config,help)
+                cmd="ai__commit__subcmd__config__subcmd__help"
                 ;;
-            ai__commit__config,init)
-                cmd="ai__commit__config__init"
+            ai__commit__subcmd__config,init)
+                cmd="ai__commit__subcmd__config__subcmd__init"
                 ;;
-            ai__commit__config,show)
-                cmd="ai__commit__config__show"
+            ai__commit__subcmd__config,show)
+                cmd="ai__commit__subcmd__config__subcmd__show"
                 ;;
-            ai__commit__config__help,edit)
-                cmd="ai__commit__config__help__edit"
+            ai__commit__subcmd__config__subcmd__help,edit)
+                cmd="ai__commit__subcmd__config__subcmd__help__subcmd__edit"
                 ;;
-            ai__commit__config__help,help)
-                cmd="ai__commit__config__help__help"
+            ai__commit__subcmd__config__subcmd__help,help)
+                cmd="ai__commit__subcmd__config__subcmd__help__subcmd__help"
                 ;;
-            ai__commit__config__help,init)
-                cmd="ai__commit__config__help__init"
+            ai__commit__subcmd__config__subcmd__help,init)
+                cmd="ai__commit__subcmd__config__subcmd__help__subcmd__init"
                 ;;
-            ai__commit__config__help,show)
-                cmd="ai__commit__config__help__show"
+            ai__commit__subcmd__config__subcmd__help,show)
+                cmd="ai__commit__subcmd__config__subcmd__help__subcmd__show"
                 ;;
-            ai__commit__help,amend)
-                cmd="ai__commit__help__amend"
+            ai__commit__subcmd__help,amend)
+                cmd="ai__commit__subcmd__help__subcmd__amend"
                 ;;
-            ai__commit__help,commit)
-                cmd="ai__commit__help__commit"
+            ai__commit__subcmd__help,commit)
+                cmd="ai__commit__subcmd__help__subcmd__commit"
                 ;;
-            ai__commit__help,completion)
-                cmd="ai__commit__help__completion"
+            ai__commit__subcmd__help,completion)
+                cmd="ai__commit__subcmd__help__subcmd__completion"
                 ;;
-            ai__commit__help,config)
-                cmd="ai__commit__help__config"
+            ai__commit__subcmd__help,config)
+                cmd="ai__commit__subcmd__help__subcmd__config"
                 ;;
-            ai__commit__help,help)
-                cmd="ai__commit__help__help"
+            ai__commit__subcmd__help,help)
+                cmd="ai__commit__subcmd__help__subcmd__help"
                 ;;
-            ai__commit__help,install)
-                cmd="ai__commit__help__install"
+            ai__commit__subcmd__help,install)
+                cmd="ai__commit__subcmd__help__subcmd__install"
                 ;;
-            ai__commit__help,uninstall)
-                cmd="ai__commit__help__uninstall"
+            ai__commit__subcmd__help,uninstall)
+                cmd="ai__commit__subcmd__help__subcmd__uninstall"
                 ;;
-            ai__commit__help__config,edit)
-                cmd="ai__commit__help__config__edit"
+            ai__commit__subcmd__help__subcmd__config,edit)
+                cmd="ai__commit__subcmd__help__subcmd__config__subcmd__edit"
                 ;;
-            ai__commit__help__config,init)
-                cmd="ai__commit__help__config__init"
+            ai__commit__subcmd__help__subcmd__config,init)
+                cmd="ai__commit__subcmd__help__subcmd__config__subcmd__init"
                 ;;
-            ai__commit__help__config,show)
-                cmd="ai__commit__help__config__show"
+            ai__commit__subcmd__help__subcmd__config,show)
+                cmd="ai__commit__subcmd__help__subcmd__config__subcmd__show"
                 ;;
             *)
                 ;;
@@ -98,12 +98,20 @@ _ai-commit() {
 
     case "${cmd}" in
         ai__commit)
-            opts="-a -h -V --add --help --version install uninstall completion commit amend config help"
+            opts="-a -f -h -V --config --help --version install uninstall completion commit amend config help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
+                --config)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -f)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -111,7 +119,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__amend)
+        ai__subcmd__commit__subcmd__amend)
             opts="-h --context-limit --dry-run --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -129,7 +137,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__commit)
+        ai__subcmd__commit__subcmd__commit)
             opts="-a -h --add --context-limit --dry-run --generate-only --output-file --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -151,7 +159,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__completion)
+        ai__subcmd__commit__subcmd__completion)
             opts="-h --help bash elvish fish powershell zsh"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -165,7 +173,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config)
+        ai__subcmd__commit__subcmd__config)
             opts="-h --help show init edit help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -179,7 +187,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__edit)
+        ai__subcmd__commit__subcmd__config__subcmd__edit)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -193,7 +201,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__help)
+        ai__subcmd__commit__subcmd__config__subcmd__help)
             opts="show init edit help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -207,7 +215,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__help__edit)
+        ai__subcmd__commit__subcmd__config__subcmd__help__subcmd__edit)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -221,7 +229,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__help__help)
+        ai__subcmd__commit__subcmd__config__subcmd__help__subcmd__help)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -235,7 +243,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__help__init)
+        ai__subcmd__commit__subcmd__config__subcmd__help__subcmd__init)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -249,7 +257,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__help__show)
+        ai__subcmd__commit__subcmd__config__subcmd__help__subcmd__show)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -263,7 +271,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__init)
+        ai__subcmd__commit__subcmd__config__subcmd__init)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -277,7 +285,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__config__show)
+        ai__subcmd__commit__subcmd__config__subcmd__show)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -291,7 +299,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help)
+        ai__subcmd__commit__subcmd__help)
             opts="install uninstall completion commit amend config help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -305,7 +313,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__amend)
+        ai__subcmd__commit__subcmd__help__subcmd__amend)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -319,7 +327,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__commit)
+        ai__subcmd__commit__subcmd__help__subcmd__commit)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -333,7 +341,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__completion)
+        ai__subcmd__commit__subcmd__help__subcmd__completion)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -347,7 +355,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__config)
+        ai__subcmd__commit__subcmd__help__subcmd__config)
             opts="show init edit"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -361,7 +369,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__config__edit)
+        ai__subcmd__commit__subcmd__help__subcmd__config__subcmd__edit)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -375,7 +383,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__config__init)
+        ai__subcmd__commit__subcmd__help__subcmd__config__subcmd__init)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -389,7 +397,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__config__show)
+        ai__subcmd__commit__subcmd__help__subcmd__config__subcmd__show)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -403,7 +411,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__help)
+        ai__subcmd__commit__subcmd__help__subcmd__help)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -417,7 +425,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__install)
+        ai__subcmd__commit__subcmd__help__subcmd__install)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -431,7 +439,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__help__uninstall)
+        ai__subcmd__commit__subcmd__help__subcmd__uninstall)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -445,7 +453,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__install)
+        ai__subcmd__commit__subcmd__install)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -459,7 +467,7 @@ _ai-commit() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
-        ai__commit__uninstall)
+        ai__subcmd__commit__subcmd__uninstall)
             opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )

@@ -1,6 +1,6 @@
 # Print an optspec for argparse to handle cmd's options that are independent of any subcommand.
 function __fish_ai_commit_global_optspecs
-	string join \n a/add h/help V/version
+	string join \n a f/config= h/help V/version
 end
 
 function __fish_ai_commit_needs_command
@@ -24,7 +24,8 @@ function __fish_ai_commit_using_subcommand
 	contains -- $cmd[1] $argv
 end
 
-complete -c ai-commit -n "__fish_ai_commit_needs_command" -s a -l add -d 'Stage all changes before generating the commit message'
+complete -c ai-commit -n "__fish_ai_commit_needs_command" -s f -l config -d 'Use a custom config file' -r -F
+complete -c ai-commit -n "__fish_ai_commit_needs_command" -s a -d 'Stage all changes before generating the commit message'
 complete -c ai-commit -n "__fish_ai_commit_needs_command" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_needs_command" -s V -l version -d 'Print version'
 complete -c ai-commit -n "__fish_ai_commit_needs_command" -f -a "install" -d 'Install git hooks for AI commit assistance'

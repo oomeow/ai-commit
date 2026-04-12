@@ -15,8 +15,9 @@ _ai-commit() {
 
     local context curcontext="$curcontext" state line
     _arguments "${_arguments_options[@]}" : \
+'-f+[Use a custom config file]:FILE:_files' \
+'--config=[Use a custom config file]:FILE:_files' \
 '-a[Stage all changes before generating the commit message]' \
-'--add[Stage all changes before generating the commit message]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '-V[Print version]' \
@@ -73,7 +74,7 @@ _arguments "${_arguments_options[@]}" : \
 _arguments "${_arguments_options[@]}" : \
 '-h[Print help]' \
 '--help[Print help]' \
-":: :_ai-commit__config_commands" \
+":: :_ai-commit__subcmd__config_commands" \
 "*::: :->config" \
 && ret=0
 
@@ -103,7 +104,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (help)
 _arguments "${_arguments_options[@]}" : \
-":: :_ai-commit__config__help_commands" \
+":: :_ai-commit__subcmd__config__subcmd__help_commands" \
 "*::: :->help" \
 && ret=0
 
@@ -139,7 +140,7 @@ esac
 ;;
 (help)
 _arguments "${_arguments_options[@]}" : \
-":: :_ai-commit__help_commands" \
+":: :_ai-commit__subcmd__help_commands" \
 "*::: :->help" \
 && ret=0
 
@@ -171,7 +172,7 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (config)
 _arguments "${_arguments_options[@]}" : \
-":: :_ai-commit__help__config_commands" \
+":: :_ai-commit__subcmd__help__subcmd__config_commands" \
 "*::: :->config" \
 && ret=0
 
@@ -223,23 +224,23 @@ _ai-commit_commands() {
     )
     _describe -t commands 'ai-commit commands' commands "$@"
 }
-(( $+functions[_ai-commit__amend_commands] )) ||
-_ai-commit__amend_commands() {
+(( $+functions[_ai-commit__subcmd__amend_commands] )) ||
+_ai-commit__subcmd__amend_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit amend commands' commands "$@"
 }
-(( $+functions[_ai-commit__commit_commands] )) ||
-_ai-commit__commit_commands() {
+(( $+functions[_ai-commit__subcmd__commit_commands] )) ||
+_ai-commit__subcmd__commit_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit commit commands' commands "$@"
 }
-(( $+functions[_ai-commit__completion_commands] )) ||
-_ai-commit__completion_commands() {
+(( $+functions[_ai-commit__subcmd__completion_commands] )) ||
+_ai-commit__subcmd__completion_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit completion commands' commands "$@"
 }
-(( $+functions[_ai-commit__config_commands] )) ||
-_ai-commit__config_commands() {
+(( $+functions[_ai-commit__subcmd__config_commands] )) ||
+_ai-commit__subcmd__config_commands() {
     local commands; commands=(
 'show:Show current configuration' \
 'init:Initialize default configuration' \
@@ -248,13 +249,13 @@ _ai-commit__config_commands() {
     )
     _describe -t commands 'ai-commit config commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__edit_commands] )) ||
-_ai-commit__config__edit_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__edit_commands] )) ||
+_ai-commit__subcmd__config__subcmd__edit_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit config edit commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__help_commands] )) ||
-_ai-commit__config__help_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__help_commands] )) ||
+_ai-commit__subcmd__config__subcmd__help_commands() {
     local commands; commands=(
 'show:Show current configuration' \
 'init:Initialize default configuration' \
@@ -263,38 +264,38 @@ _ai-commit__config__help_commands() {
     )
     _describe -t commands 'ai-commit config help commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__help__edit_commands] )) ||
-_ai-commit__config__help__edit_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__help__subcmd__edit_commands] )) ||
+_ai-commit__subcmd__config__subcmd__help__subcmd__edit_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit config help edit commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__help__help_commands] )) ||
-_ai-commit__config__help__help_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__help__subcmd__help_commands] )) ||
+_ai-commit__subcmd__config__subcmd__help__subcmd__help_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit config help help commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__help__init_commands] )) ||
-_ai-commit__config__help__init_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__help__subcmd__init_commands] )) ||
+_ai-commit__subcmd__config__subcmd__help__subcmd__init_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit config help init commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__help__show_commands] )) ||
-_ai-commit__config__help__show_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__help__subcmd__show_commands] )) ||
+_ai-commit__subcmd__config__subcmd__help__subcmd__show_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit config help show commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__init_commands] )) ||
-_ai-commit__config__init_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__init_commands] )) ||
+_ai-commit__subcmd__config__subcmd__init_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit config init commands' commands "$@"
 }
-(( $+functions[_ai-commit__config__show_commands] )) ||
-_ai-commit__config__show_commands() {
+(( $+functions[_ai-commit__subcmd__config__subcmd__show_commands] )) ||
+_ai-commit__subcmd__config__subcmd__show_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit config show commands' commands "$@"
 }
-(( $+functions[_ai-commit__help_commands] )) ||
-_ai-commit__help_commands() {
+(( $+functions[_ai-commit__subcmd__help_commands] )) ||
+_ai-commit__subcmd__help_commands() {
     local commands; commands=(
 'install:Install git hooks for AI commit assistance' \
 'uninstall:Remove AI commit hooks' \
@@ -306,23 +307,23 @@ _ai-commit__help_commands() {
     )
     _describe -t commands 'ai-commit help commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__amend_commands] )) ||
-_ai-commit__help__amend_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__amend_commands] )) ||
+_ai-commit__subcmd__help__subcmd__amend_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help amend commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__commit_commands] )) ||
-_ai-commit__help__commit_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__commit_commands] )) ||
+_ai-commit__subcmd__help__subcmd__commit_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help commit commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__completion_commands] )) ||
-_ai-commit__help__completion_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__completion_commands] )) ||
+_ai-commit__subcmd__help__subcmd__completion_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help completion commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__config_commands] )) ||
-_ai-commit__help__config_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__config_commands] )) ||
+_ai-commit__subcmd__help__subcmd__config_commands() {
     local commands; commands=(
 'show:Show current configuration' \
 'init:Initialize default configuration' \
@@ -330,43 +331,43 @@ _ai-commit__help__config_commands() {
     )
     _describe -t commands 'ai-commit help config commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__config__edit_commands] )) ||
-_ai-commit__help__config__edit_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__config__subcmd__edit_commands] )) ||
+_ai-commit__subcmd__help__subcmd__config__subcmd__edit_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help config edit commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__config__init_commands] )) ||
-_ai-commit__help__config__init_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__config__subcmd__init_commands] )) ||
+_ai-commit__subcmd__help__subcmd__config__subcmd__init_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help config init commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__config__show_commands] )) ||
-_ai-commit__help__config__show_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__config__subcmd__show_commands] )) ||
+_ai-commit__subcmd__help__subcmd__config__subcmd__show_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help config show commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__help_commands] )) ||
-_ai-commit__help__help_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__help_commands] )) ||
+_ai-commit__subcmd__help__subcmd__help_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help help commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__install_commands] )) ||
-_ai-commit__help__install_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__install_commands] )) ||
+_ai-commit__subcmd__help__subcmd__install_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help install commands' commands "$@"
 }
-(( $+functions[_ai-commit__help__uninstall_commands] )) ||
-_ai-commit__help__uninstall_commands() {
+(( $+functions[_ai-commit__subcmd__help__subcmd__uninstall_commands] )) ||
+_ai-commit__subcmd__help__subcmd__uninstall_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit help uninstall commands' commands "$@"
 }
-(( $+functions[_ai-commit__install_commands] )) ||
-_ai-commit__install_commands() {
+(( $+functions[_ai-commit__subcmd__install_commands] )) ||
+_ai-commit__subcmd__install_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit install commands' commands "$@"
 }
-(( $+functions[_ai-commit__uninstall_commands] )) ||
-_ai-commit__uninstall_commands() {
+(( $+functions[_ai-commit__subcmd__uninstall_commands] )) ||
+_ai-commit__subcmd__uninstall_commands() {
     local commands; commands=()
     _describe -t commands 'ai-commit uninstall commands' commands "$@"
 }
