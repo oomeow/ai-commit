@@ -50,8 +50,27 @@ pub fn get_unstaged_diff(commit_config: &CommitConfig) -> Result<String> {
     format_diff(diff, commit_config)
 }
 
+fn max_consecutive_backticks(line: &str) -> usize {
+    let mut max_len = 0;
+    let mut current_len = 0;
+
+    for ch in line.chars() {
+        if ch == '`' {
+            current_len += 1;
+            if current_len > max_len {
+                max_len = current_len;
+            }
+        } else {
+            current_len = 0;
+        }
+    }
+
+    max_len
+}
+
 fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String> {
     let mut diff_content = String::new();
+    let mut max_backticks = 0;
 
     diff.print(git2::DiffFormat::Patch, |delta, _hunk, line| {
         if let Some(path) = delta.new_file().path() {
@@ -63,14 +82,21 @@ fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String>
                 return true;
             }
         }
-
         if let Ok(content) = str::from_utf8(line.content()) {
+            diff_content.push(line.origin());
+            let line_max_backticks = max_consecutive_backticks(content);
+            if line_max_backticks > max_backticks {
+                max_backticks = line_max_backticks;
+            }
             diff_content.push_str(content);
         }
         true
     })?;
 
-    Ok(diff_content)
+    let top_wrap_backticks = "`".repeat(max_backticks + 1);
+    let final_diff = format!("{}diff\n{}\n{}", top_wrap_backticks, diff_content, top_wrap_backticks);
+
+    Ok(final_diff)
 }
 
 fn should_ignore_file(path: &std::path::Path) -> bool {
