@@ -93,7 +93,11 @@ fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String>
         true
     })?;
 
-    let top_wrap_backticks = "`".repeat(max_backticks + 1);
+    if diff_content.is_empty() {
+        return Ok(diff_content);
+    }
+
+    let top_wrap_backticks = "`".repeat((max_backticks + 1).max(3));
     let final_diff = format!("{}diff\n{}\n{}", top_wrap_backticks, diff_content, top_wrap_backticks);
 
     Ok(final_diff)
