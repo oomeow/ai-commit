@@ -1,15 +1,12 @@
 use std::str;
 
 use anyhow::Result;
-use git2::{DiffLineType, DiffOptions, IndexAddOption, Repository};
+use git2::{DiffLineType, DiffOptions, IndexAddOption};
 
-use crate::config::CommitConfig;
+use crate::{config::CommitConfig, git::open_repo};
 
 pub fn add_all_files_to_git() -> Result<()> {
-    let repo = Repository::open_from_env().unwrap_or_else(|e| {
-        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
-        std::process::exit(1);
-    });
+    let repo = open_repo();
     let mut index = repo.index().expect("cannot get the Index file");
     index.add_all(["*"].iter(), IndexAddOption::DEFAULT, None)?;
     index.write()?;
@@ -17,10 +14,7 @@ pub fn add_all_files_to_git() -> Result<()> {
 }
 
 pub fn get_staged_diff(commit_config: &CommitConfig) -> Result<String> {
-    let repo = Repository::open_from_env().unwrap_or_else(|e| {
-        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
-        std::process::exit(1);
-    });
+    let repo = open_repo();
 
     let head = repo.head()?.peel_to_tree()?;
     let mut index = repo.index()?;
@@ -36,10 +30,7 @@ pub fn get_staged_diff(commit_config: &CommitConfig) -> Result<String> {
 }
 
 pub fn get_unstaged_diff(commit_config: &CommitConfig) -> Result<String> {
-    let repo = Repository::open_from_env().unwrap_or_else(|e| {
-        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
-        std::process::exit(1);
-    });
+    let repo = open_repo();
 
     let mut diff_opts = DiffOptions::new();
     diff_opts.context_lines(3);
@@ -142,10 +133,7 @@ fn should_ignore_by_custom_patterns(path: &std::path::Path, patterns: &[String])
 }
 
 pub fn get_unstaged_diff_debug() -> Result<String> {
-    let repo = Repository::open_from_env().unwrap_or_else(|e| {
-        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
-        std::process::exit(1);
-    });
+    let repo = open_repo();
 
     let mut diff_opts = DiffOptions::new();
     diff_opts.context_lines(3);
@@ -172,10 +160,7 @@ pub fn get_unstaged_diff_debug() -> Result<String> {
 }
 
 pub fn get_amend_diff(commit_config: &CommitConfig) -> Result<String> {
-    let repo = Repository::open_from_env().unwrap_or_else(|e| {
-        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
-        std::process::exit(1);
-    });
+    let repo = open_repo();
 
     // fetch HEAD parent commit
     let head_commit = repo.head()?.peel_to_commit()?;
@@ -199,10 +184,7 @@ pub fn get_amend_diff(commit_config: &CommitConfig) -> Result<String> {
 }
 
 pub fn get_last_commit_message() -> Result<String> {
-    let repo = Repository::open_from_env().unwrap_or_else(|e| {
-        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
-        std::process::exit(1);
-    });
+    let repo = open_repo();
 
     let head_commit = repo.head()?.peel_to_commit()?;
     Ok(head_commit.message().unwrap_or("").to_string())

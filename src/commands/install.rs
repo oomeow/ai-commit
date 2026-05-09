@@ -2,21 +2,13 @@ use std::fs;
 
 use anyhow::Result;
 use colored::*;
-use git2::Repository;
+
+use crate::git::open_repo;
 
 pub fn install_hook() -> Result<()> {
     println!("Installing AI-assisted Git hooks...");
 
-    let repo = match Repository::open_from_env() {
-        Ok(repo) => repo,
-        Err(e) => {
-            println!(
-                "{}",
-                format!("❌ Failed to open git repository. Make sure you're in a git repository: {e}").red()
-            );
-            return Ok(());
-        }
-    };
+    let repo = open_repo();
     let hooks_dir = repo.path().join("hooks");
     let hook_path = hooks_dir.join("prepare-commit-msg");
     let hook_content = include_str!("../../templates/prepare-commit-msg");

@@ -1,6 +1,15 @@
 use std::process::Command;
 
 use anyhow::Result;
+use colored::*;
+use git2::Repository;
+
+pub fn open_repo() -> Repository {
+    Repository::open_from_env().unwrap_or_else(|e| {
+        println!("{}", format!("❌ Failed to open git repository. Make sure you're in a git repository: {e}").red());
+        std::process::exit(1);
+    })
+}
 
 pub fn execute_commit_with_cli(message: &str) -> Result<()> {
     println!("🚀 Committing changes...");
