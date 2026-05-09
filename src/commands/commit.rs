@@ -51,7 +51,7 @@ pub async fn handle_commit(
     let mut hasher = DefaultHasher::new();
     diff.diff_code_block.hash(&mut hasher);
     let diff_content_hash = hasher.finish();
-    let mut cache = Cache::load()?;
+    let mut cache = Cache::load(ai_client.config.commit.cache_expiry_days)?;
 
     let (mut message, should_print_generate_message) = if let Some(cached_msg) =
         cache.get_commit_message(diff_content_hash)

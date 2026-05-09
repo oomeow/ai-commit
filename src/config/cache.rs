@@ -35,17 +35,16 @@ pub struct Cache {
 }
 
 impl Cache {
-    pub fn load() -> Result<Self> {
+    pub fn load(expiry_days: u64) -> Result<Self> {
         let cache_file_path = get_cache_file_path()?;
         debug!("Loading cache commits message from: {}", cache_file_path.display());
         if cache_file_path.exists() {
             let cache_content = fs::read_to_string(&cache_file_path)?;
             let mut cache: Cache = toml::from_str(&cache_content)?;
 
-            // Remove expired commit messages (Default 7 days)
-            // TODO: make expiry seconds configurable
+            // Remove expired commit messages
             let now = get_now_timestamp()?;
-            let expiry_seconds = 60 * 60 * 24 * 7;
+            let expiry_seconds = 60 * 60 * 24 * expiry_days;
             cache.commit_msgs.retain(|m| !m.is_expired(now, expiry_seconds));
             cache.save()?;
 

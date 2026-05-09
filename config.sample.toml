@@ -14,6 +14,7 @@ auto_confirm = false
 dry_run_by_default = false
 ignore_lock_files = true
 custom_ignore_patterns = []
+cache_expiry_days = 7
 
 # [hooks]
 # enabled = false

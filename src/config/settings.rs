@@ -37,6 +37,7 @@ pub struct CommitConfig {
     pub gpg_sign: Option<bool>,
     pub ignore_lock_files: bool,
     pub custom_ignore_patterns: Vec<String>,
+    pub cache_expiry_days: u64,
 }
 
 // #[derive(Debug, Serialize, Deserialize)]
