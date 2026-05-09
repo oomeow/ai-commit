@@ -80,7 +80,7 @@ impl AiClient {
 
     pub async fn generate_commit_message(&self, diff: &str) -> anyhow::Result<String> {
         let user_prompt = self.config.generate_user_prompt(diff);
-        // std::fs::write("user_prompt.txt", &user_prompt).unwrap();
+        // std::fs::write("user_prompt.md", &user_prompt).unwrap();
         let system_message = Message::system(self.config.prompts.system_prompt.as_str());
         let user_message = Message::user(user_prompt.as_str());
         debug!("Sending system messages: {system_message:?}");

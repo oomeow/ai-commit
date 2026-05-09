@@ -1,5 +1,6 @@
+.DS_Store
 /target
+
 config.toml
 config.dev.toml
-user_prompt.txt
-.DS_Store
+user_prompt.md
