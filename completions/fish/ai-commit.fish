@@ -38,13 +38,11 @@ complete -c ai-commit -n "__fish_ai_commit_needs_command" -f -a "help" -d 'Print
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand install" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand uninstall" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand completion" -s h -l help -d 'Print help'
-complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -l context-limit -d 'Maximum characters to send to AI (default: 200000)' -r
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -l output-file -d 'Write generated message to file' -r -F
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -s a -l add -d 'Stage all changes before generating the commit message'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -l dry-run -d 'Show generated message without committing'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -l generate-only -d 'Generate commit message only (no commit, no confirmation)'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -s h -l help -d 'Print help'
-complete -c ai-commit -n "__fish_ai_commit_using_subcommand amend" -l context-limit -d 'Maximum characters to send to AI (default: 200000)' -r
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand amend" -l dry-run -d 'Show generated message without amending'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand amend" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit help" -s h -l help -d 'Print help'

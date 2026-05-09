@@ -93,13 +93,13 @@ fn build_cli() -> Command {
                         .help("Stage all changes before generating the commit message")
                         .action(clap::ArgAction::SetTrue),
                 )
-                .arg(
-                    Arg::new("context-limit")
-                        .long("context-limit")
-                        .value_name("CHARS")
-                        .help("Maximum characters to send to AI (default: 200000)")
-                        .value_parser(clap::value_parser!(usize)),
-                )
+                // .arg(
+                //     Arg::new("context-limit")
+                //         .long("context-limit")
+                //         .value_name("CHARS")
+                //         .help("Maximum characters to send to AI (default: 200000)")
+                //         .value_parser(clap::value_parser!(usize)),
+                // )
                 .arg(
                     Arg::new("dry-run")
                         .long("dry-run")
@@ -123,13 +123,13 @@ fn build_cli() -> Command {
         .subcommand(
             Command::new("amend")
                 .about("Amend the last commit with staged changes using AI-generated message")
-                .arg(
-                    Arg::new("context-limit")
-                        .long("context-limit")
-                        .value_name("CHARS")
-                        .help("Maximum characters to send to AI (default: 200000)")
-                        .value_parser(clap::value_parser!(usize)),
-                )
+                // .arg(
+                //     Arg::new("context-limit")
+                //         .long("context-limit")
+                //         .value_name("CHARS")
+                //         .help("Maximum characters to send to AI (default: 200000)")
+                //         .value_parser(clap::value_parser!(usize)),
+                // )
                 .arg(
                     Arg::new("dry-run")
                         .long("dry-run")

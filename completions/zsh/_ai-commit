@@ -52,7 +52,6 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (commit)
 _arguments "${_arguments_options[@]}" : \
-'--context-limit=[Maximum characters to send to AI (default\: 200000)]:CHARS:_default' \
 '--output-file=[Write generated message to file]:FILE:_files' \
 '-a[Stage all changes before generating the commit message]' \
 '--add[Stage all changes before generating the commit message]' \
@@ -64,7 +63,6 @@ _arguments "${_arguments_options[@]}" : \
 ;;
 (amend)
 _arguments "${_arguments_options[@]}" : \
-'--context-limit=[Maximum characters to send to AI (default\: 200000)]:CHARS:_default' \
 '--dry-run[Show generated message without amending]' \
 '-h[Print help]' \
 '--help[Print help]' \

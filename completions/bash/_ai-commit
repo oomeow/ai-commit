@@ -120,16 +120,12 @@ _ai-commit() {
             return 0
             ;;
         ai__subcmd__commit__subcmd__amend)
-            opts="-h --context-limit --dry-run --help"
+            opts="-h --dry-run --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --context-limit)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 *)
                     COMPREPLY=()
                     ;;
@@ -138,16 +134,12 @@ _ai-commit() {
             return 0
             ;;
         ai__subcmd__commit__subcmd__commit)
-            opts="-a -h --add --context-limit --dry-run --generate-only --output-file --help"
+            opts="-a -h --add --dry-run --generate-only --output-file --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
             case "${prev}" in
-                --context-limit)
-                    COMPREPLY=($(compgen -f "${cur}"))
-                    return 0
-                    ;;
                 --output-file)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
