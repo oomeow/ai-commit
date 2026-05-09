@@ -123,7 +123,7 @@ mod tests {
                 },
                 prompts: PromptConfig {
                     system_prompt: "system".to_string(),
-                    user_prompt_template: "{diff}".to_string(),
+                    user_prompt_template: "{diff_code_block}".to_string(),
                 },
             },
         }

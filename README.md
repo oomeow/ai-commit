@@ -216,7 +216,7 @@ user_prompt_template = """Review the following Git diff and write the best commi
 #### Prompt Settings (`[prompts]`)
 
 - `system_prompt`: System prompt that defines AI behavior
-- `user_prompt_template`: Template for analyzing diffs (use `{diff}` placeholder)
+- `user_prompt_template`: Template for analyzing diffs (use `{diff_code_block}` placeholder)
 
 ### Customizing AI Prompts
 
@@ -243,15 +243,13 @@ Return only the commit message.
 Prefer a single-line Conventional Commit.
 
 Git diff:
-```diff
-{diff}
-```"""
+{diff_code_block}
 
 ````
 
 **Tips for Custom Prompts:**
 
-- Keep the `{diff}` placeholder in templates
+- Keep the `{diff_code_block}` placeholder in templates
 - Test changes with `ai-commit commit --dry-run`
 - Configuration reloads automatically on next run
 - Back up custom prompts before updates

@@ -93,7 +93,7 @@ impl AppConfig {
     }
 
     pub fn generate_user_prompt(&self, diff: &str) -> String {
-        self.prompts.user_prompt_template.replace("{diff}", diff)
+        self.prompts.user_prompt_template.replace("{diff_code_block}", diff)
     }
 }
 

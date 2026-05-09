@@ -136,7 +136,10 @@ mod tests {
                 ignore_lock_files: true,
                 custom_ignore_patterns: vec![],
             },
-            prompts: PromptConfig { system_prompt: "system".to_string(), user_prompt_template: "{diff}".to_string() },
+            prompts: PromptConfig {
+                system_prompt: "system".to_string(),
+                user_prompt_template: "{diff_code_block}".to_string(),
+            },
         }
     }
 

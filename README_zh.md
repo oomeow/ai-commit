@@ -216,7 +216,7 @@ user_prompt_template = """Review the following Git diff and write the best commi
 #### 提示设置 (`[prompts]`)
 
 - `system_prompt`：定义 AI 行为的系统提示
-- `user_prompt_template`：分析 diff 的模板（使用 `{diff}` 占位符）
+- `user_prompt_template`：分析 diff 的模板（使用 `{diff_code_block}` 占位符）
 
 ### 自定义 AI 提示
 
@@ -243,15 +243,13 @@ Return only the commit message.
 Prefer a single-line Conventional Commit.
 
 Git diff:
-```diff
-{diff}
-```"""
+{diff_code_block}
 
 ````
 
 **自定义提示的技巧：**
 
-- 在模板中保留 `{diff}` 占位符
+- 在模板中保留 `{diff_code_block}` 占位符
 - 使用 `ai-commit commit --dry-run` 测试更改
 - 配置在下次运行时自动重新加载
 - 在更新前备份自定义提示

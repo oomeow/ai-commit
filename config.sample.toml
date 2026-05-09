@@ -70,6 +70,6 @@ chore(deps): update dependencies"""
 user_prompt_template = """Review the following Git diff and write the best commit message.
 
 Git diff:
-{diff}
+{diff_code_block}
 
 Provide only the commit message."""

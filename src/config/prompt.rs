@@ -58,9 +58,8 @@ Requirements:
 - Base the message on the main intent of the change, not on minor edits
 
 Git diff:
-````diff
-{diff}
-````"#;
+{diff_code_block}
+"#;
 
 // pub fn get_system_prompt() -> String {
 //     let a = AppConfig::load().map(|config| config.prompts.system_prompt);
@@ -75,5 +74,5 @@ Git diff:
 // }
 
 // pub fn format_commit_prompt(diff: &str) -> String {
-//     get_user_prompt_template().replace("{diff}", diff)
+//     get_user_prompt_template().replace("{diff_code_block}", diff)
 // }
