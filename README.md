@@ -12,7 +12,7 @@ AI Commit Tool integrates with your Git workflow to automatically generate high-
 
 - **AI-Generated Commit Messages**: Automatically analyzes git diffs and generates contextual commit messages following conventional commit format
 - **Edit Before Confirming**: Review the AI result, open it in your terminal editor, and fine-tune the message before the final commit prompt
-- **Multiple Provider Support**: Built-in support for OpenAI, OpenRouter, DeepSeek, Zhipu, and Ollama
+- **Multiple Provider Support**: Built-in support for OpenAI, OpenRouter, DeepSeek, Zhipu, Ollama, and custom endpoints
 - **Automatic Dry-Run Fallback**: If nothing is staged, the tool previews a message from unstaged changes instead of committing
 - **Amend Support**: Generate new messages for amending previous commits with additional changes
 - **Local Message Cache**: Reuses generated messages for the same diff and lets you regenerate on demand
@@ -166,12 +166,15 @@ ai-commit config init
 
 ```toml
 [api]
+# Use a built-in provider, or omit this field and set endpoint/model manually.
 provider = "openrouter"
+# endpoint = "https://openrouter.ai/api/v1/chat/completions"
+# protocol = "openai"
 api_key = "12345-678910-1122-3344-123123123123"
 model = "z-ai/glm-4.5-air:free"
 max_tokens = 1000
 temperature = 0.7
-context_limit = 200000
+# context_limit = 200000
 
 [commit]
 auto_confirm = false
@@ -192,14 +195,14 @@ user_prompt_template = """Review the following Git diff and write the best commi
 
 #### API Settings (`[api]`)
 
-- `provider`: Built-in provider name such as `openai`, `openrouter`, `deepseek`, `zhipu`, or `ollama`
+- `provider`: Optional built-in provider name such as `openai`, `openrouter`, `deepseek`, `zhipu`, `ollama`, or `lmstudio`
+- `endpoint`: Optional final chat API endpoint. When set, the client calls this URL directly without appending protocol paths.
+- `protocol`: Optional request/response format: `openai`, `ollama`, or `lmstudio`. Defaults to the built-in provider protocol, or `openai` for custom endpoints.
 - `api_key`: API key used for authenticated providers
-- `base_url`: Optional base URL override used to build chat and models requests
-- `endpoint`: Optional full chat endpoint override
 - `model`: AI model to use for generation
 - `max_tokens`: Maximum tokens for AI response (default: 1000)
 - `temperature`: Creativity level 0.0-1.0 (default: 0.7)
-- `context_limit`: Reserved configuration for future diff-size limiting
+<!--- `context_limit`: Reserved configuration for future diff-size limiting-->
 
 #### Commit Settings (`[commit]`)
 
@@ -382,7 +385,20 @@ ai-commit commit --dry-run
 - Creates a default config automatically when missing
 - Validates edited TOML before saving through `config edit`
 - Hot-reload of configuration changes without restart
-- Supports provider-level `base_url` and `endpoint` overrides
+- Supports built-in providers and direct custom chat endpoints
+
+Custom endpoint example:
+
+```toml
+[api]
+endpoint = "https://api.example.com/v1/chat/completions"
+protocol = "openai"
+api_key = "your-api-key"
+model = "provider-model-name"
+max_tokens = 1000
+temperature = 0.7
+# context_limit = 200000
+```
 
 ### Security
 

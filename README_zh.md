@@ -12,7 +12,7 @@ AI Commit Tool 集成到你的 Git 工作流程中，自动生成遵循 Conventi
 
 - **AI 生成提交信息**：自动分析 git diff 并生成遵循常规提交格式的上下文提交信息
 - **提交前可编辑信息**：先查看 AI 结果，再用终端编辑器微调提交信息，最后确认是否提交
-- **多 Provider 支持**：内置支持 OpenAI、OpenRouter、DeepSeek、Zhipu 和 Ollama
+- **多 Provider 支持**：内置支持 OpenAI、OpenRouter、DeepSeek、Zhipu、Ollama，也支持自定义 endpoint
 - **自动回退试运行**：当没有暂存内容时，会基于未暂存变更生成预览而不直接提交
 - **修订支持**：为修订之前的提交生成新信息
 - **本地消息缓存**：相同 diff 会复用已生成结果，并支持按需重新生成
@@ -166,12 +166,15 @@ ai-commit config init
 
 ```toml
 [api]
+# 使用内置 provider；或者省略该字段，手动配置 endpoint/model。
 provider = "openrouter"
+# endpoint = "https://openrouter.ai/api/v1/chat/completions"
+# protocol = "openai"
 api_key = "12345-678910-1122-3344-123123123123"
 model = "z-ai/glm-4.5-air:free"
 max_tokens = 1000
 temperature = 0.7
-context_limit = 200000
+# context_limit = 200000
 
 [commit]
 auto_confirm = false
@@ -192,14 +195,14 @@ user_prompt_template = """Review the following Git diff and write the best commi
 
 #### API 设置 (`[api]`)
 
-- `provider`：内置 provider 名称，例如 `openai`、`openrouter`、`deepseek`、`zhipu`、`ollama`
+- `provider`：可选的内置 provider 名称，例如 `openai`、`openrouter`、`deepseek`、`zhipu`、`ollama`、`lmstudio`
+- `endpoint`：可选的最终 chat API 地址；设置后客户端会直接调用该 URL，不再追加 protocol path
+- `protocol`：可选请求/响应格式：`openai`、`ollama` 或 `lmstudio`；内置 provider 默认使用自身格式，自定义 endpoint 默认使用 `openai`
 - `api_key`：需要鉴权的 provider 使用的 API Key
-- `base_url`：可选的基础地址覆盖项，用于拼接 chat 和 models 请求
-- `endpoint`：可选的完整 chat 接口地址覆盖项
 - `model`：用于生成的 AI 模型
 - `max_tokens`：AI 响应的最大令牌数（默认：1000）
 - `temperature`：创造性水平 0.0-1.0（默认：0.7）
-- `context_limit`：为后续 diff 大小限制预留的配置项
+<!--- `context_limit`：为后续 diff 大小限制预留的配置项-->
 
 #### 提交设置 (`[commit]`)
 
@@ -381,7 +384,20 @@ ai-commit commit --dry-run
 - 配置缺失时会自动创建默认配置
 - 通过 `config edit` 保存前会校验 TOML 格式
 - 配置变更的热重载，无需重启
-- 支持 provider 级别的 `base_url` 和 `endpoint` 覆盖
+- 支持内置 provider 和直接配置自定义 chat endpoint
+
+自定义 endpoint 示例：
+
+```toml
+[api]
+endpoint = "https://api.example.com/v1/chat/completions"
+protocol = "openai"
+api_key = "your-api-key"
+model = "provider-model-name"
+max_tokens = 1000
+temperature = 0.7
+# context_limit = 200000
+```
 
 ### 安全性
 

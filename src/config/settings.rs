@@ -7,7 +7,7 @@ use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::dirs::get_config_file_path;
+use crate::{ai::ProtocolKind, dirs::get_config_file_path};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -19,14 +19,15 @@ pub struct AppConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiConfig {
-    pub provider: String,
-    pub base_url: Option<String>,
+    pub provider: Option<String>,
     pub endpoint: Option<String>,
     pub model: String,
     pub api_key: Option<String>,
     pub max_tokens: Option<usize>,
     pub temperature: Option<f64>,
-    pub context_limit: usize,
+    // pub context_limit: usize,
+    #[serde(alias = "protocol_type")]
+    pub protocol: Option<ProtocolKind>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -5,7 +5,7 @@ use colored::*;
 use dialoguer::{Confirm, Editor, FuzzySelect, Input, Password, Select, theme::ColorfulTheme};
 
 use crate::{
-    ai::{AiClient, provider_names},
+    ai::{AiClient, provider_specs},
     commands::{THEME, show_confirm},
     config::AppConfig,
     dirs::get_config_file_path,
@@ -32,24 +32,25 @@ pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
 
     let theme = &*THEME;
 
-    let provider_names = provider_names();
+    let specs = provider_specs();
+    let display_items: Vec<&str> = specs.iter().map(|spec| spec.display_name).collect();
     let provider_index =
-        Select::with_theme(theme).with_prompt("Select an AI provider").items(&provider_names).default(0).interact()?;
-    let provider_name = provider_names[provider_index];
+        Select::with_theme(theme).with_prompt("Select an AI provider").items(&display_items).default(0).interact()?;
+    let provider_name = specs[provider_index].name;
 
     let api_key = Password::with_theme(theme)
         .with_prompt(format!("Enter API key for {provider_name}"))
         .allow_empty_password(true)
         .interact()?;
 
-    config.api.provider = provider_name.to_string();
+    config.api.provider = Some(provider_name.to_string());
     config.api.api_key = if api_key.is_empty() { None } else { Some(api_key) };
 
     config.api.model = select_model(theme, &config).await?;
 
     println!();
     println!("{}", "Configuration preview:".bright_cyan().bold());
-    println!("Provider: {}", config.api.provider.bright_green());
+    println!("Provider: {}", config.api.provider.as_deref().unwrap_or_default().bright_green());
     println!("Model: {}", config.api.model.bright_green());
     println!("Config file: {}", config_path.display().to_string().bright_blue());
 
@@ -72,7 +73,7 @@ pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
 }
 
 async fn select_model(theme: &ColorfulTheme, config: &AppConfig) -> Result<String> {
-    match AiClient::with_config(config.clone()).fetch_available_models().await {
+    match AiClient::with_config(config.clone()).fetch_provider_models().await {
         Ok(models) if !models.is_empty() => {
             let mut models = models;
             models.sort();
