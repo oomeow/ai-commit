@@ -1,7 +1,7 @@
 use std::str;
 
 use anyhow::Result;
-use git2::{DiffOptions, IndexAddOption, Repository};
+use git2::{DiffLineType, DiffOptions, IndexAddOption, Repository};
 
 use crate::config::CommitConfig;
 
@@ -83,7 +83,9 @@ fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String>
             }
         }
         if let Ok(content) = str::from_utf8(line.content()) {
-            diff_content.push(line.origin());
+            if matches!(line.origin_value(), DiffLineType::Context | DiffLineType::Addition | DiffLineType::Deletion) {
+                diff_content.push(line.origin());
+            }
             let line_max_backticks = max_consecutive_backticks(content);
             if line_max_backticks > max_backticks {
                 max_backticks = line_max_backticks;
