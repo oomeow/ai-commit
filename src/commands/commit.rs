@@ -12,28 +12,21 @@ use crate::{
     ai::AiClient,
     commands::show_confirm,
     config::{AppConfig, Cache, CommitMsg, get_now_timestamp},
-    git::{add_all_files_to_git, execute_commit_with_cli, get_staged_diff, get_unstaged_diff},
+    git::{execute_commit_with_cli, get_staged_diff, get_unstaged_diff},
 };
 
 pub async fn handle_commit(
-    add: bool,
     generate_only: bool,
     custom_config_file: Option<&PathBuf>,
     output_file: Option<&PathBuf>,
 ) -> Result<()> {
-    let ai_client = if let Some(config_path) = custom_config_file {
-        let config = AppConfig::load_from_path(config_path)?;
-        AiClient::with_config(config)
-    } else {
-        AiClient::new()
+    let ai_client = match custom_config_file {
+        Some(config_path) => AiClient::with_config(AppConfig::load_from_path(config_path)?),
+        None => AiClient::new(),
     };
 
-    if add {
-        add_all_files_to_git()?;
-    }
     let staged_diff = get_staged_diff(&ai_client.config.commit)?;
     let unstaged_diff = get_unstaged_diff(&ai_client.config.commit)?;
-
     let (diff_content, is_dry_run) = if !staged_diff.is_empty() {
         if !generate_only {
             println!("{}", "✅ Staged changes found. Generating commit message...".green());
@@ -59,88 +52,113 @@ pub async fn handle_commit(
     diff_content.hash(&mut hasher);
     let diff_content_hash = hasher.finish();
     let mut cache = Cache::load()?;
-    let generate_msg = async |cache: &mut Cache| -> Result<String> {
-        match ai_client.generate_commit_message(&diff_content).await {
-            Ok(msg) => {
-                if msg.is_empty() {
-                    println!("{}", "❌ AI did not generate a commit message.".red());
-                    std::process::exit(0);
-                }
-                debug!("save commit message: {} -> {}", diff_content_hash, msg);
-                let now = get_now_timestamp()?;
-                let commit_msg = CommitMsg::new(diff_content_hash, msg.clone(), now);
-                cache.store_commit_message(commit_msg)?;
-                Ok(msg)
-            }
-            Err(e) => {
-                println!("{}", format!("❌ Failed to generate commit message: {e}").red());
-                std::process::exit(0);
-            }
-        }
-    };
-    let mut message = if let Some(cached_msg) = cache.get_commit_message(diff_content_hash) {
-        if generate_only {
-            cached_msg.get_msg()
-        } else {
-            println!("Cache hit: {}", cached_msg.get_msg().bright_green().bold());
-            if show_confirm("Do you want to regenerate this commit message?", false)? {
-                generate_msg(&mut cache).await?
-            } else {
-                cached_msg.get_msg()
-            }
-        }
-    } else {
-        generate_msg(&mut cache).await?
-    };
 
-    // Handle output based on parameters
+    let (mut message, should_print_generate_message) =
+        if let Some(cached_msg) = cache.get_commit_message(diff_content_hash) {
+            if generate_only {
+                (cached_msg.get_msg(), false)
+            } else {
+                println!("{}", "♻️ Reusing cached commit message:".bright_cyan().bold());
+                println!("{}", "─────────────────────".bright_blue());
+                println!("{}", cached_msg.get_msg().bright_green().bold());
+                println!("{}", "─────────────────────".bright_blue());
+                if show_confirm("Do you want to regenerate this commit message?", false)? {
+                    let Some(message) =
+                        generate_and_cache_message(&ai_client, &diff_content, diff_content_hash, &mut cache).await?
+                    else {
+                        return Ok(());
+                    };
+                    (message, true)
+                } else {
+                    (cached_msg.get_msg(), false)
+                }
+            }
+        } else {
+            let Some(message) =
+                generate_and_cache_message(&ai_client, &diff_content, diff_content_hash, &mut cache).await?
+            else {
+                return Ok(());
+            };
+            (message, true)
+        };
+
     if let Some(output_path) = output_file {
-        // Write message to file
         std::fs::write(output_path, &message)?;
         if !generate_only {
             println!("{}", format!("Commit message written to: {}", output_path.display()).green());
         }
-    } else if generate_only {
-        // Generate-only mode: output only the message
+        return Ok(());
+    }
+
+    if generate_only {
         println!("{}", message.bright_green().bold());
-    } else {
-        // Normal verbose output
+        return Ok(());
+    }
+
+    if should_print_generate_message {
         println!("{}", "✨ Generated commit message:".bright_cyan().bold());
         println!("{}", "─────────────────────".bright_blue());
         println!("{}", message.bright_green().bold());
         println!("{}", "─────────────────────".bright_blue());
+    }
 
-        if is_dry_run {
-            println!("{}", "(Dry run mode - no actual commit made)".yellow());
-            println!("{}", "To commit these changes:".yellow());
-            println!("{}", "1. Stage your changes: git add <files>".yellow());
-            println!("{}", "2. Run ai-commit again".yellow());
-        } else {
-            // Only ask for confirmation if not in generate-only mode
-            // (generate-only is handled above, but keep this for safety)
-            if !ai_client.config.commit.auto_confirm {
-                if confirm_edit_message()?
-                    && let Some(edited) = Editor::new().edit(&message)?
-                {
-                    message = edited.clone();
-                    println!("{}", "✍️ Edited commit message:".bright_cyan().bold());
-                    println!("{}", "─────────────────────".bright_blue());
-                    println!("{}", message.bright_green().bold());
-                    println!("{}", "─────────────────────".bright_blue());
-                    let now = get_now_timestamp()?;
-                    let commit_msg = CommitMsg::new(diff_content_hash, edited, now);
-                    cache.store_commit_message(commit_msg)?;
-                }
-                if !confirm_commit()? {
-                    println!("{}", "❌ Commit cancelled.".red());
-                    return Ok(());
-                }
-                execute_commit_with_cli(&message)?;
-            }
+    if is_dry_run {
+        println!("{}", "(Dry run mode - no actual commit made)".yellow());
+        println!("{}", "To commit these changes:".yellow());
+        println!("{}", "1. Stage your changes: git add <files>".yellow());
+        println!("{}", "2. Run ai-commit again".yellow());
+        return Ok(());
+    }
+
+    if !ai_client.config.commit.auto_confirm {
+        if confirm_edit_message()?
+            && let Some(edited) = Editor::new().edit(&message)?
+        {
+            message = edited.clone();
+            println!("{}", "✍️ Edited commit message:".bright_cyan().bold());
+            println!("{}", "─────────────────────".bright_blue());
+            println!("{}", message.bright_green().bold());
+            println!("{}", "─────────────────────".bright_blue());
+
+            let commit_msg = CommitMsg::new(diff_content_hash, edited, get_now_timestamp()?);
+            cache.store_commit_message(commit_msg)?;
+        }
+
+        if !confirm_commit()? {
+            println!("{}", "❌ Commit cancelled.".red());
+            return Ok(());
         }
     }
 
+    execute_commit_with_cli(&message)?;
+
     Ok(())
+}
+
+async fn generate_and_cache_message(
+    ai_client: &AiClient,
+    diff_content: &str,
+    diff_content_hash: u64,
+    cache: &mut Cache,
+) -> Result<Option<String>> {
+    let msg = match ai_client.generate_commit_message(diff_content).await {
+        Ok(msg) => msg,
+        Err(e) => {
+            println!("{}", format!("❌ Failed to generate commit message: {e}").red());
+            return Ok(None);
+        }
+    };
+
+    if msg.is_empty() {
+        println!("{}", "❌ AI did not generate a commit message.".red());
+        return Ok(None);
+    }
+
+    debug!("save commit message: {} -> {}", diff_content_hash, msg);
+    let commit_msg = CommitMsg::new(diff_content_hash, msg.clone(), get_now_timestamp()?);
+    cache.store_commit_message(commit_msg)?;
+
+    Ok(Some(msg))
 }
 
 fn confirm_edit_message() -> Result<bool> {

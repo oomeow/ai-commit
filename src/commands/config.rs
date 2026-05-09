@@ -46,7 +46,11 @@ pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
     config.api.provider = Some(provider_name.to_string());
     config.api.api_key = if api_key.is_empty() { None } else { Some(api_key) };
 
-    config.api.model = select_model(theme, &config).await?;
+    let Some(model) = select_model(theme, &config).await? else {
+        println!("{}", "❌ Configuration initialization cancelled.".red());
+        return Ok(());
+    };
+    config.api.model = model;
 
     println!();
     println!("{}", "Configuration preview:".bright_cyan().bold());
@@ -72,7 +76,7 @@ pub async fn init_config(custom_config_file: Option<&PathBuf>) -> Result<()> {
     Ok(())
 }
 
-async fn select_model(theme: &ColorfulTheme, config: &AppConfig) -> Result<String> {
+async fn select_model(theme: &ColorfulTheme, config: &AppConfig) -> Result<Option<String>> {
     match AiClient::with_config(config.clone()).fetch_provider_models().await {
         Ok(models) if !models.is_empty() => {
             let mut models = models;
@@ -85,23 +89,23 @@ async fn select_model(theme: &ColorfulTheme, config: &AppConfig) -> Result<Strin
                 .default(0)
                 .max_length(12)
                 .interact()?;
-            Ok(models[model_index].clone())
+            Ok(Some(models[model_index].clone()))
         }
         Ok(_) => prompt_model_fallback(theme, "No models were returned by the provider."),
         Err(error) => prompt_model_fallback(theme, &format!("Failed to fetch models: {error}")),
     }
 }
 
-fn prompt_model_fallback(theme: &ColorfulTheme, reason: &str) -> Result<String> {
+fn prompt_model_fallback(theme: &ColorfulTheme, reason: &str) -> Result<Option<String>> {
     println!("{}", format!("⚠️  {reason}").yellow());
 
     let should_continue =
         Confirm::with_theme(theme).with_prompt("Do you want to enter a model manually?").default(true).interact()?;
     if !should_continue {
-        return Err(anyhow::anyhow!("Configuration initialization cancelled."));
+        return Ok(None);
     }
 
-    Ok(Input::with_theme(theme).with_prompt("Enter model name").interact_text()?)
+    Ok(Some(Input::with_theme(theme).with_prompt("Enter model name").interact_text()?))
 }
 
 pub fn show_config(custom_config_file: Option<&PathBuf>) -> Result<()> {

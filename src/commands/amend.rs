@@ -10,33 +10,27 @@ use crate::{
     git::{execute_amend_with_cli, get_amend_diff, get_last_commit_message, get_staged_diff},
 };
 
-pub async fn handle_amend(custom_config: Option<&PathBuf>) -> Result<()> {
-    let ai_client = if let Some(config_path) = custom_config {
-        let config = AppConfig::load_from_path(config_path)?;
-        AiClient::with_config(config)
-    } else {
-        AiClient::new()
+pub async fn handle_amend(custom_config: Option<&PathBuf>, dry_run: bool) -> Result<()> {
+    let ai_client = match custom_config {
+        Some(config_path) => AiClient::with_config(AppConfig::load_from_path(config_path)?),
+        None => AiClient::new(),
     };
 
-    // 检查是否有staged changes或者需要amend
     let staged_diff = get_staged_diff(&ai_client.config.commit)?;
     let amend_diff = get_amend_diff(&ai_client.config.commit)?;
-    let last_commit_msg = get_last_commit_message()?;
-
-    let diff_content = if !staged_diff.is_empty() {
+    if !staged_diff.is_empty() {
         println!("{}", "✅ Found staged changes to amend.".green());
-        amend_diff
     } else {
         println!("{}", "⚠️  No staged changes found.".yellow());
         println!("{}", "Will generate new message for existing commit content.".yellow());
-        amend_diff
-    };
+    }
 
-    if diff_content.is_empty() {
+    if amend_diff.is_empty() {
         println!("{}", "❌ No changes found to amend.".red());
         return Ok(());
     }
 
+    let last_commit_msg = get_last_commit_message()?;
     println!("{}", "📝 Current commit message:".bright_blue().bold());
     println!("{}", "─────────────────────".bright_blue());
     println!("{}", last_commit_msg.trim().bright_yellow());
@@ -44,88 +38,36 @@ pub async fn handle_amend(custom_config: Option<&PathBuf>) -> Result<()> {
 
     println!("{}", "🤖 Generating new commit message using AI service...".cyan());
 
-    match ai_client.generate_commit_message(&diff_content).await {
-        Ok(message) => {
-            if message.is_empty() {
-                println!("{}", "❌ AI did not generate a commit message.".red());
-                return Ok(());
-            }
-
-            println!("{}", "✨ Generated new commit message:".bright_cyan().bold());
-            println!("{}", "─────────────────────".bright_blue());
-            println!("{}", message.bright_green().bold());
-            println!("{}", "─────────────────────".bright_blue());
-
-            if !ai_client.config.commit.auto_confirm && !confirm_amend()? {
-                println!("{}", "❌ Amend cancelled.".red());
-                return Ok(());
-            }
-
-            execute_amend_with_cli(&message)?;
-        }
+    let message = match ai_client.generate_commit_message(&amend_diff).await {
+        Ok(message) => message,
         Err(e) => {
-            println!("{}", format!("❌ Failed to generate commit message 1: {e}").red());
+            println!("{}", format!("❌ Failed to generate commit message: {e}").red());
+            return Ok(());
         }
     };
 
-    Ok(())
-}
-
-pub async fn handle_amend_with_options(dry_run: bool) -> Result<()> {
-    let ai_client = AiClient::new();
-
-    let staged_diff = get_staged_diff(&ai_client.config.commit)?;
-    let amend_diff = get_amend_diff(&ai_client.config.commit)?;
-    let last_commit_msg = get_last_commit_message()?;
-
-    let diff_content = if !staged_diff.is_empty() {
-        println!("{}", "✅ Found staged changes to amend.".green());
-        amend_diff
-    } else {
-        println!("{}", "⚠️  No staged changes found.".yellow());
-        println!("{}", "Will generate new message for existing commit content.".yellow());
-        amend_diff
-    };
-
-    if diff_content.is_empty() {
-        println!("{}", "❌ No changes found to amend.".red());
+    if message.is_empty() {
+        println!("{}", "❌ AI did not generate a commit message.".red());
         return Ok(());
     }
 
-    println!("{}", "📝 Current commit message:".bright_blue().bold());
+    println!("{}", "✨ Generated new commit message:".bright_cyan().bold());
     println!("{}", "─────────────────────".bright_blue());
-    println!("{}", last_commit_msg.trim().bright_yellow());
+    println!("{}", message.bright_green().bold());
     println!("{}", "─────────────────────".bright_blue());
 
-    println!("{}", "🤖 Generating new commit message using AI service...".cyan());
+    if dry_run {
+        println!("{}", "(Dry run mode - no actual amend made)".yellow());
+        println!("{}", "To amend: git commit --amend -m \"<message>\"".yellow());
+        return Ok(());
+    }
 
-    match ai_client.generate_commit_message(&diff_content).await {
-        Ok(message) => {
-            if message.is_empty() {
-                println!("{}", "❌ AI did not generate a commit message.".red());
-                return Ok(());
-            }
+    if !ai_client.config.commit.auto_confirm && !confirm_amend()? {
+        println!("{}", "❌ Amend cancelled.".red());
+        return Ok(());
+    }
 
-            println!("{}", "✨ Generated new commit message:".bright_cyan().bold());
-            println!("{}", "─────────────────────".bright_blue());
-            println!("{}", message.bright_green().bold());
-            println!("{}", "─────────────────────".bright_blue());
-
-            if dry_run {
-                println!("{}", "(Dry run mode - no actual amend made)".yellow());
-                println!("{}", "To amend: git commit --amend -m \"<message>\"".yellow());
-            } else {
-                if !ai_client.config.commit.auto_confirm && !confirm_amend()? {
-                    println!("{}", "❌ Amend cancelled.".red());
-                    return Ok(());
-                }
-                execute_amend_with_cli(&message)?;
-            }
-        }
-        Err(e) => {
-            println!("{}", format!("❌ Failed to generate commit message 2: {e}").red());
-        }
-    };
+    execute_amend_with_cli(&message)?;
 
     Ok(())
 }

@@ -7,19 +7,21 @@ use git2::Repository;
 pub fn uninstall_hook() -> Result<()> {
     println!("Uninstalling AI-assisted Git hooks...");
 
-    let repo = Repository::open_from_env().unwrap_or_else(|e| {
-        eprintln!("Failed to open git repository. Make sure you're in a git repository: {e}");
-        std::process::exit(1);
-    });
+    let repo = match Repository::open_from_env() {
+        Ok(repo) => repo,
+        Err(e) => {
+            println!(
+                "{}",
+                format!("❌ Failed to open git repository. Make sure you're in a git repository: {e}").red()
+            );
+            return Ok(());
+        }
+    };
     let hooks_dir = repo.path().join("hooks");
     let hook_path = hooks_dir.join("prepare-commit-msg");
 
     if hook_path.exists() {
-        // Check if it's an ai-commit hook by looking for "ai-commit" in the content
-        let is_ai_commit_hook = match fs::read_to_string(&hook_path) {
-            Ok(content) => content.contains("ai-commit"),
-            Err(_) => false, // If we can't read it, assume it's not ours
-        };
+        let is_ai_commit_hook = fs::read_to_string(&hook_path).is_ok_and(|content| content.contains("ai-commit"));
 
         if is_ai_commit_hook {
             fs::remove_file(&hook_path)?;
