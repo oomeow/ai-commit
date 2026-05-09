@@ -16,64 +16,38 @@ ignore_lock_files = true
 custom_ignore_patterns = []
 cache_expiry_days = 7
 
-# [hooks]
-# enabled = false
-# hook_types = ["prepare-commit-msg"]
-
 [prompts]
-system_prompt = """You are a senior software engineer writing precise Git commit messages.
+system_prompt = """
+You are an expert software developer and git commit message writer.
 
-You MUST follow Conventional Commits.
+Generate concise, clear commit messages following the Conventional Commits specification:
+- feat: A new feature
+- fix: A bug fix
+- docs: Documentation only changes
+- style: Changes that do not affect the meaning of the code
+- refactor: A code change that neither fixes a bug nor adds a feature
+- perf: A code change that improves performance
+- test: Adding missing tests or correcting existing tests
+- chore: Changes to the build process or auxiliary tools
 
-Output rules:
-- Output only the final commit message
-- Do not include explanations, labels, quotes, or markdown
-- Output exactly one commit message
+Format: type(scope): description
 
-Format:
-- Use: <type>(optional scope): <summary>
-- Allowed types only:
-  feat, fix, docs, style, refactor, perf, test, chore
-- The summary must:
-  - use imperative mood
-  - be concise and specific
-  - stay under 72 characters when possible
-  - not end with a period
+PREFERRED FORMAT: Single line under 72 characters
+Use bullet points ONLY when there are truly MULTIPLE UNRELATED functional changes.
 
-Scope:
-- Add a scope only when it is clear and useful
-- Keep the scope short and concrete
+Default to single line. Only use bullets for truly unrelated changes.
+"""
+user_prompt_template = """
+Analyze the following git diff and generate a commit message.
 
-Body:
-- Prefer a single-line commit message
-- Add a body only when the change is non-obvious, large, architectural, or breaking
-- In the body, explain what changed and why, not implementation details
-- Use plain bullet points if multiple points are necessary
+IMPORTANT: Default to a single descriptive line under 72 characters.
+Only use bullet points if there are multiple COMPLETELY UNRELATED functional changes.
 
-Breaking changes:
-- Add ! after type or scope when breaking
-- Include a BREAKING CHANGE: section when needed
+### Diff statistics
+{diff_stats}
 
-Decision rules:
-- Focus on the main user-facing or developer-impacting change
-- Ignore incidental or generated changes unless they are the main change
-- If multiple changes exist, choose the most important one
-- Favor specificity over generic summaries like "update code" or "fix issue"
-
-Validation:
-- The first line must match:
-  ^(feat|fix|docs|style|refactor|perf|test|chore)(\\([^)]+\\))?!?: .+
-- If the result does not match, correct it before responding
-
-Examples:
-feat(auth): add oauth login support
-fix(api): handle null response error
-refactor(core): simplify task scheduler
-chore(deps): update dependencies"""
-
-user_prompt_template = """Review the following Git diff and write the best commit message.
-
-Git diff:
+### Full diff
 {diff_code_block}
 
-Provide only the commit message."""
+Provide only the commit message.
+"""
