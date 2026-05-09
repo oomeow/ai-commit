@@ -12,7 +12,7 @@ use crate::{
     ai::AiClient,
     commands::show_confirm,
     config::{AppConfig, Cache, CommitMsg, get_now_timestamp},
-    git::{execute_commit_with_cli, get_staged_diff, get_unstaged_diff},
+    git::{DiffContext, execute_commit_with_cli, get_staged_diff, get_unstaged_diff},
 };
 
 pub async fn handle_commit(
@@ -27,7 +27,7 @@ pub async fn handle_commit(
 
     let staged_diff = get_staged_diff(&ai_client.config.commit)?;
     let unstaged_diff = get_unstaged_diff(&ai_client.config.commit)?;
-    let (diff_content, is_dry_run) = if !staged_diff.is_empty() {
+    let (diff, is_dry_run) = if !staged_diff.is_empty() {
         if !generate_only {
             println!("{}", "✅ Staged changes found. Generating commit message...".green());
         }
@@ -49,38 +49,37 @@ pub async fn handle_commit(
     }
 
     let mut hasher = DefaultHasher::new();
-    diff_content.hash(&mut hasher);
+    diff.diff_code_block.hash(&mut hasher);
     let diff_content_hash = hasher.finish();
     let mut cache = Cache::load()?;
 
-    let (mut message, should_print_generate_message) =
-        if let Some(cached_msg) = cache.get_commit_message(diff_content_hash) {
-            if generate_only {
-                (cached_msg.get_msg(), false)
-            } else {
-                println!("{}", "♻️ Reusing cached commit message:".bright_cyan().bold());
-                println!("{}", "─────────────────────".bright_blue());
-                println!("{}", cached_msg.get_msg().bright_green().bold());
-                println!("{}", "─────────────────────".bright_blue());
-                if show_confirm("Do you want to regenerate this commit message?", false)? {
-                    let Some(message) =
-                        generate_and_cache_message(&ai_client, &diff_content, diff_content_hash, &mut cache).await?
-                    else {
-                        return Ok(());
-                    };
-                    (message, true)
-                } else {
-                    (cached_msg.get_msg(), false)
-                }
-            }
+    let (mut message, should_print_generate_message) = if let Some(cached_msg) =
+        cache.get_commit_message(diff_content_hash)
+    {
+        if generate_only {
+            (cached_msg.get_msg(), false)
         } else {
-            let Some(message) =
-                generate_and_cache_message(&ai_client, &diff_content, diff_content_hash, &mut cache).await?
-            else {
-                return Ok(());
-            };
-            (message, true)
+            println!("{}", "♻️ Reusing cached commit message:".bright_cyan().bold());
+            println!("{}", "─────────────────────".bright_blue());
+            println!("{}", cached_msg.get_msg().bright_green().bold());
+            println!("{}", "─────────────────────".bright_blue());
+            if show_confirm("Do you want to regenerate this commit message?", false)? {
+                let Some(message) =
+                    generate_and_cache_message(&ai_client, &diff, diff_content_hash, &mut cache).await?
+                else {
+                    return Ok(());
+                };
+                (message, true)
+            } else {
+                (cached_msg.get_msg(), false)
+            }
+        }
+    } else {
+        let Some(message) = generate_and_cache_message(&ai_client, &diff, diff_content_hash, &mut cache).await? else {
+            return Ok(());
         };
+        (message, true)
+    };
 
     if let Some(output_path) = output_file {
         std::fs::write(output_path, &message)?;
@@ -137,11 +136,11 @@ pub async fn handle_commit(
 
 async fn generate_and_cache_message(
     ai_client: &AiClient,
-    diff_content: &str,
+    diff: &DiffContext,
     diff_content_hash: u64,
     cache: &mut Cache,
 ) -> Result<Option<String>> {
-    let msg = match ai_client.generate_commit_message(diff_content).await {
+    let msg = match ai_client.generate_commit_message(diff).await {
         Ok(msg) => msg,
         Err(e) => {
             println!("{}", format!("❌ Failed to generate commit message: {e}").red());

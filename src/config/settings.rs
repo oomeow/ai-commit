@@ -7,7 +7,7 @@ use anyhow::Result;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::{ai::ProtocolKind, dirs::get_config_file_path};
+use crate::{ai::ProtocolKind, dirs::get_config_file_path, git::DiffContext};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
@@ -93,8 +93,11 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn generate_user_prompt(&self, diff: &str) -> String {
-        self.prompts.user_prompt_template.replace("{diff_code_block}", diff)
+    pub fn generate_user_prompt(&self, diff: &DiffContext) -> String {
+        self.prompts
+            .user_prompt_template
+            .replace("{diff_stats}", &diff.stats)
+            .replace("{diff_code_block}", &diff.diff_code_block)
     }
 }
 

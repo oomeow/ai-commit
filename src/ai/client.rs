@@ -2,7 +2,7 @@ use log::debug;
 use reqwest::Client;
 use serde::Serialize;
 
-use crate::{ai::provider::resolve_api_config, config::AppConfig};
+use crate::{ai::provider::resolve_api_config, config::AppConfig, git::DiffContext};
 
 #[derive(Serialize, Debug)]
 pub struct Message<'a> {
@@ -73,9 +73,11 @@ impl AiClient {
         }
     }
 
-    pub async fn generate_commit_message(&self, diff: &str) -> anyhow::Result<String> {
+    pub async fn generate_commit_message(&self, diff: &DiffContext) -> anyhow::Result<String> {
         let user_prompt = self.config.generate_user_prompt(diff);
-        // std::fs::write("user_prompt.md", &user_prompt).unwrap();
+        #[cfg(debug_assertions)]
+        #[allow(clippy::unwrap_used)]
+        std::fs::write("user_prompt.md", &user_prompt).unwrap();
         let system_message = Message::system(self.config.prompts.system_prompt.as_str());
         let user_message = Message::user(user_prompt.as_str());
         debug!("Sending system messages: {system_message:?}");

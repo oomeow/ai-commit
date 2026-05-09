@@ -1,9 +1,29 @@
 use std::str;
 
 use anyhow::Result;
-use git2::{DiffLineType, DiffOptions, IndexAddOption};
+use git2::{DiffLineType, DiffOptions, DiffStatsFormat, IndexAddOption};
+use log::debug;
 
 use crate::{config::CommitConfig, git::open_repo};
+
+pub struct DiffContext {
+    pub stats: String,
+    pub diff_code_block: String,
+}
+
+impl DiffContext {
+    pub fn new(stats: String, diff_code_block: String) -> Self {
+        Self { stats, diff_code_block }
+    }
+
+    pub fn empty() -> Self {
+        Self::new(String::new(), String::new())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.diff_code_block.is_empty()
+    }
+}
 
 pub fn add_all_files_to_git() -> Result<()> {
     let repo = open_repo();
@@ -13,7 +33,7 @@ pub fn add_all_files_to_git() -> Result<()> {
     Ok(())
 }
 
-pub fn get_staged_diff(commit_config: &CommitConfig) -> Result<String> {
+pub fn get_staged_diff(commit_config: &CommitConfig) -> Result<DiffContext> {
     let repo = open_repo();
 
     let head = repo.head()?.peel_to_tree()?;
@@ -29,7 +49,7 @@ pub fn get_staged_diff(commit_config: &CommitConfig) -> Result<String> {
     format_diff(diff, commit_config)
 }
 
-pub fn get_unstaged_diff(commit_config: &CommitConfig) -> Result<String> {
+pub fn get_unstaged_diff(commit_config: &CommitConfig) -> Result<DiffContext> {
     let repo = open_repo();
 
     let mut diff_opts = DiffOptions::new();
@@ -59,9 +79,14 @@ fn max_consecutive_backticks(line: &str) -> usize {
     max_len
 }
 
-fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String> {
+fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<DiffContext> {
     let mut diff_content = String::new();
     let mut max_backticks = 0;
+
+    let stats = diff.stats()?;
+    let buf = stats.to_buf(DiffStatsFormat::FULL, 80)?;
+    let stats = String::from_utf8(buf.to_vec())?;
+    debug!("Diff statistics:\n{}", stats);
 
     diff.print(git2::DiffFormat::Patch, |delta, _hunk, line| {
         if let Some(path) = delta.new_file().path() {
@@ -87,13 +112,13 @@ fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<String>
     })?;
 
     if diff_content.is_empty() {
-        return Ok(diff_content);
+        return Ok(DiffContext::empty());
     }
 
     let top_wrap_backticks = "`".repeat((max_backticks + 1).max(3));
     let final_diff = format!("{}diff\n{}\n{}", top_wrap_backticks, diff_content, top_wrap_backticks);
 
-    Ok(final_diff)
+    Ok(DiffContext::new(stats, final_diff))
 }
 
 fn should_ignore_file(path: &std::path::Path) -> bool {
@@ -159,7 +184,7 @@ pub fn get_unstaged_diff_debug() -> Result<String> {
     Ok(diff_content)
 }
 
-pub fn get_amend_diff(commit_config: &CommitConfig) -> Result<String> {
+pub fn get_amend_diff(commit_config: &CommitConfig) -> Result<DiffContext> {
     let repo = open_repo();
 
     // fetch HEAD parent commit
