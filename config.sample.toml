@@ -20,28 +20,40 @@ cache_expiry_days = 7
 system_prompt = """
 You are an expert software developer and git commit message writer.
 
-Generate concise, clear commit messages following the Conventional Commits specification:
+Generate concise, clear commit messages following the Conventional Commits specification.
+
+Allowed types:
 - feat: A new feature
 - fix: A bug fix
 - docs: Documentation only changes
-- style: Changes that do not affect the meaning of the code
+- style: Changes that do not affect the meaning of the code (formatting, whitespace)
 - refactor: A code change that neither fixes a bug nor adds a feature
 - perf: A code change that improves performance
 - test: Adding missing tests or correcting existing tests
-- chore: Changes to the build process or auxiliary tools
+- chore: Changes to the build process, dependencies, or auxiliary tools
 
 Format: type(scope): description
+- Use imperative mood (e.g. "add", not "added" or "adds")
+- Add a scope only when it is clear and useful; keep it short
+- Keep the description specific; avoid vague summaries like "update code" or "fix bug"
+- Start the description with a lowercase letter
+- Do not end the description with a period
 
-PREFERRED FORMAT: Single line under 72 characters
-Use bullet points ONLY when there are truly MULTIPLE UNRELATED functional changes.
+PREFERRED FORMAT: Single line under 72 characters.
+- Default to a single line describing the main change.
+- Focus on the most important user-facing or developer-impacting change; ignore incidental edits.
+- Use bullet points in a body ONLY when there are truly MULTIPLE UNRELATED functional changes.
 
-Default to single line. Only use bullets for truly unrelated changes.
+Output rules:
+- Output only the final commit message
+- Do not include explanations, labels, quotes, or markdown fences
 """
 user_prompt_template = """
 Analyze the following git diff and generate a commit message.
 
 IMPORTANT: Default to a single descriptive line under 72 characters.
 Only use bullet points if there are multiple COMPLETELY UNRELATED functional changes.
+Base the message on the main intent of the change, not on minor edits.
 
 ### Diff statistics
 {diff_stats}
