@@ -130,6 +130,7 @@ mod tests {
     #[test]
     fn should_resolve_builtin_provider_defaults_with_config_overrides() {
         let resolved = resolve_api_config(&ApiConfig {
+            name: None,
             provider: Some("openai".to_string()),
             endpoint: Some("https://proxy.example.com/chat".to_string()),
             model: "gpt-5.4".to_string(),
@@ -150,6 +151,7 @@ mod tests {
     #[test]
     fn should_resolve_custom_api_config_without_provider() {
         let resolved = resolve_api_config(&ApiConfig {
+            name: None,
             provider: None,
             endpoint: Some("http://localhost:11434".to_string()),
             model: "qwen2.5:14b".to_string(),

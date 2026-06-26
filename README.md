@@ -13,6 +13,7 @@ AI Commit Tool integrates with your Git workflow to automatically generate high-
 - **AI-Generated Commit Messages**: Automatically analyzes git diffs and generates contextual commit messages following conventional commit format
 - **Edit Before Confirming**: Review the AI result, open it in your terminal editor, and fine-tune the message before the final commit prompt
 - **Multiple Provider Support**: Built-in support for OpenAI, OpenRouter, DeepSeek, Zhipu, Ollama, and custom endpoints
+- **Multiple Provider Profiles**: Configure several named providers in one config file, pick a default, and switch per run with `--provider`
 - **Automatic Dry-Run Fallback**: If nothing is staged, the tool previews a message from unstaged changes instead of committing
 - **Amend Support**: Generate new messages for amending previous commits with additional changes
 - **Local Message Cache**: Reuses generated messages for the same diff and lets you regenerate on demand
@@ -106,6 +107,10 @@ ai-commit commit --generate-only
 
 # Write the generated message to a file
 ai-commit commit --output-file .git/COMMIT_EDITMSG
+
+# Use a specific configured provider for this run (overrides the default)
+ai-commit --provider local
+ai-commit commit -p openrouter
 ```
 
 ### Configuration Commands
@@ -119,6 +124,24 @@ ai-commit config show
 
 # Edit configuration in your terminal editor
 ai-commit config edit
+```
+
+### Provider Commands
+
+Manage multiple named providers within a single config file:
+
+```bash
+# List configured providers (the default is marked with *)
+ai-commit config provider list
+
+# Add a new provider interactively (select type, name it, enter key, pick model)
+ai-commit config provider add
+
+# Set the default provider
+ai-commit config provider use local
+
+# Remove a provider (resets the default if it was the removed one)
+ai-commit config provider remove local
 ```
 
 ### Shell Completion
@@ -165,9 +188,14 @@ ai-commit config init
 ### Default Configuration Structure
 
 ```toml
-[api]
-# Use a built-in provider, or omit this field and set endpoint/model manually.
-provider = "openrouter"
+# Name of the provider entry to use by default (references a [[providers]].name).
+# Override per run with `--provider <name>`.
+default_provider = "openrouter"
+
+# Configure one or more providers. Each entry is independent.
+[[providers]]
+name = "openrouter"           # your label for this entry; referenced by default_provider / --provider
+provider = "openrouter"       # built-in provider type (sets base_url + protocol)
 # endpoint = "https://openrouter.ai/api/v1/chat/completions"
 # protocol = "openai"
 api_key = "12345-678910-1122-3344-123123123123"
@@ -175,6 +203,12 @@ model = "z-ai/glm-4.5-air:free"
 max_tokens = 1000
 temperature = 0.7
 # context_limit = 200000
+
+# Add as many providers as you like:
+# [[providers]]
+# name = "local"
+# provider = "ollama"
+# model = "qwen2.5:14b"
 
 [commit]
 auto_confirm = false
@@ -191,10 +225,19 @@ system_prompt = """You are a senior software engineer writing precise Git commit
 user_prompt_template = """Review the following Git diff and write the best commit message..."""
 ```
 
+> Backward compatible: an older config with a single `[api]` table still works. It is automatically migrated into a `[[providers]]` entry on load, and `config show` rewrites it in the new format.
+
 ### Configuration Options
 
-#### API Settings (`[api]`)
+#### Provider Selection
 
+- `default_provider`: Name of the `[[providers]]` entry to use when no `--provider` flag is given. Falls back to the first entry if unset or missing.
+
+#### Provider Settings (`[[providers]]`)
+
+Each `[[providers]]` entry is a single provider profile:
+
+- `name`: Your label for this entry, referenced by `default_provider` and `--provider`. Defaults to the built-in provider name when omitted.
 - `provider`: Optional built-in provider name such as `openai`, `openrouter`, `deepseek`, `zhipu`, `ollama`, or `lmstudio`
 - `endpoint`: Optional final chat API endpoint. When set, the client calls this URL directly without appending protocol paths.
 - `protocol`: Optional request/response format: `openai`, `ollama`, or `lmstudio`. Defaults to the built-in provider protocol, or `openai` for custom endpoints.
@@ -259,13 +302,16 @@ Git diff:
 
 ### Interactive Configuration
 
-`ai-commit config init` now runs as an interactive setup flow:
+`ai-commit config init` runs as an interactive setup flow:
 
 - Select one of the built-in providers
+- Name the provider entry (used by `default_provider` and `--provider`)
 - Enter the provider API key, or leave it empty for local providers such as Ollama
 - Fetch models online and choose one with paginated fuzzy search
 - Fall back to manual model input if model fetching fails
-- Save the rest of the settings with sensible defaults
+- Save the entry and set it as the default provider
+
+Use `ai-commit config provider add` later to register additional providers, and `ai-commit config provider use <name>` to change the default.
 
 ## Commit Message Format
 
@@ -385,12 +431,17 @@ ai-commit commit --dry-run
 - Creates a default config automatically when missing
 - Validates edited TOML before saving through `config edit`
 - Hot-reload of configuration changes without restart
+- Supports multiple named providers with a selectable default
+- Backward compatible with the legacy single `[api]` section (auto-migrated on load)
 - Supports built-in providers and direct custom chat endpoints
 
 Custom endpoint example:
 
 ```toml
-[api]
+default_provider = "custom"
+
+[[providers]]
+name = "custom"
 endpoint = "https://api.example.com/v1/chat/completions"
 protocol = "openai"
 api_key = "your-api-key"

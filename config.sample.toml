@@ -1,6 +1,11 @@
-[api]
-# Use a built-in provider, or omit this field and set endpoint/model manually.
-provider = "openrouter"
+# Name of the provider entry to use by default (references a [[providers]].name).
+# Override per-run with `--provider <name>`.
+default_provider = "openrouter"
+
+# Configure one or more providers. Each entry is independent.
+[[providers]]
+name = "openrouter"           # your label for this entry; referenced by default_provider / --provider
+provider = "openrouter"       # built-in provider type (sets base_url + protocol)
 # endpoint = "https://openrouter.ai/api/v1/chat/completions"
 # protocol = "openai"  # supported: "openai", "ollama", or "lmstudio"
 api_key = "12345-678910-1122-3344-123123123123"
@@ -8,6 +13,12 @@ model = "z-ai/glm-4.5-air:free"
 # context_limit = 200000
 max_tokens = 1000
 temperature = 0.7
+
+# Add as many providers as you like:
+# [[providers]]
+# name = "local"
+# provider = "ollama"
+# model = "qwen2.5:14b"
 
 [commit]
 auto_confirm = false

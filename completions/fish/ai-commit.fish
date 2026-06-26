@@ -1,6 +1,6 @@
 # Print an optspec for argparse to handle cmd's options that are independent of any subcommand.
 function __fish_ai_commit_global_optspecs
-	string join \n a f/config= h/help V/version
+	string join \n a f/config= p/provider= h/help V/version
 end
 
 function __fish_ai_commit_needs_command
@@ -25,6 +25,7 @@ function __fish_ai_commit_using_subcommand
 end
 
 complete -c ai-commit -n "__fish_ai_commit_needs_command" -s f -l config -d 'Use a custom config file' -r -F
+complete -c ai-commit -n "__fish_ai_commit_needs_command" -s p -l provider -d 'Use a specific configured provider for this run' -r
 complete -c ai-commit -n "__fish_ai_commit_needs_command" -s a -d 'Stage all changes before generating the commit message'
 complete -c ai-commit -n "__fish_ai_commit_needs_command" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_needs_command" -s V -l version -d 'Print version'
@@ -39,23 +40,33 @@ complete -c ai-commit -n "__fish_ai_commit_using_subcommand install" -s h -l hel
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand uninstall" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand completion" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -l output-file -d 'Write generated message to file' -r -F
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -s p -l provider -d 'Use a specific configured provider for this run' -r
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -s a -l add -d 'Stage all changes before generating the commit message'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -l dry-run -d 'Show generated message without committing'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -l generate-only -d 'Generate commit message only (no commit, no confirmation)'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand commit" -s h -l help -d 'Print help'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand amend" -s p -l provider -d 'Use a specific configured provider for this run' -r
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand amend" -l dry-run -d 'Show generated message without amending'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand amend" -s h -l help -d 'Print help'
-complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit help" -s h -l help -d 'Print help'
-complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit help" -f -a "show" -d 'Show current configuration'
-complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit help" -f -a "init" -d 'Initialize default configuration'
-complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit help" -f -a "edit" -d 'Edit configuration in your terminal editor'
-complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit provider help" -s h -l help -d 'Print help'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit provider help" -f -a "show" -d 'Show current configuration'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit provider help" -f -a "init" -d 'Initialize default configuration'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit provider help" -f -a "edit" -d 'Edit configuration in your terminal editor'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit provider help" -f -a "provider" -d 'Manage AI providers'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and not __fish_seen_subcommand_from show init edit provider help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from show" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from init" -s h -l help -d 'Print help'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from edit" -s h -l help -d 'Print help'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from provider" -s h -l help -d 'Print help'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from provider" -f -a "list" -d 'List configured providers'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from provider" -f -a "use" -d 'Set the default provider'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from provider" -f -a "add" -d 'Add a new provider interactively'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from provider" -f -a "remove" -d 'Remove a provider'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from provider" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from help" -f -a "show" -d 'Show current configuration'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from help" -f -a "init" -d 'Initialize default configuration'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from help" -f -a "edit" -d 'Edit configuration in your terminal editor'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from help" -f -a "provider" -d 'Manage AI providers'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand config; and __fish_seen_subcommand_from help" -f -a "help" -d 'Print this message or the help of the given subcommand(s)'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand help; and not __fish_seen_subcommand_from install uninstall completion commit amend config help" -f -a "install" -d 'Install git hooks for AI commit assistance'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand help; and not __fish_seen_subcommand_from install uninstall completion commit amend config help" -f -a "uninstall" -d 'Remove AI commit hooks'
@@ -67,3 +78,4 @@ complete -c ai-commit -n "__fish_ai_commit_using_subcommand help; and not __fish
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand help; and __fish_seen_subcommand_from config" -f -a "show" -d 'Show current configuration'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand help; and __fish_seen_subcommand_from config" -f -a "init" -d 'Initialize default configuration'
 complete -c ai-commit -n "__fish_ai_commit_using_subcommand help; and __fish_seen_subcommand_from config" -f -a "edit" -d 'Edit configuration in your terminal editor'
+complete -c ai-commit -n "__fish_ai_commit_using_subcommand help; and __fish_seen_subcommand_from config" -f -a "provider" -d 'Manage AI providers'

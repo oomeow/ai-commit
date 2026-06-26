@@ -10,11 +10,12 @@ use crate::{
     git::{execute_amend_with_cli, get_amend_diff, get_last_commit_message, get_staged_diff},
 };
 
-pub async fn handle_amend(custom_config: Option<&PathBuf>, dry_run: bool) -> Result<()> {
+pub async fn handle_amend(custom_config: Option<&PathBuf>, dry_run: bool, provider: Option<&str>) -> Result<()> {
     let ai_client = match custom_config {
         Some(config_path) => AiClient::with_config(AppConfig::load_from_path(config_path)?),
         None => AiClient::new(),
-    };
+    }
+    .with_provider(provider.map(str::to_owned));
 
     let staged_diff = get_staged_diff(&ai_client.config.commit)?;
     let amend_diff = get_amend_diff(&ai_client.config.commit)?;
