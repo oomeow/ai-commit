@@ -24,22 +24,33 @@ impl<'a> Message<'a> {
 pub struct AiClient {
     client: Client,
     pub config: AppConfig,
+    /// Optional runtime override selecting which configured provider to use.
+    provider_override: Option<String>,
 }
 
 impl AiClient {
     pub fn new() -> Self {
         let config = AppConfig::load().unwrap_or_default();
         let client = Client::new();
-        AiClient { client, config }
+        AiClient { client, config, provider_override: None }
     }
 
     pub fn with_config(config: AppConfig) -> Self {
         let client = Client::new();
-        AiClient { client, config }
+        AiClient { client, config, provider_override: None }
+    }
+
+    /// Select which configured provider to use for this client. A `None` or
+    /// empty value keeps the default resolution behavior.
+    #[must_use]
+    pub fn with_provider(mut self, name: Option<String>) -> Self {
+        self.provider_override = name.map(|name| name.trim().to_string()).filter(|name| !name.is_empty());
+        self
     }
 
     pub async fn fetch_provider_models(&self) -> anyhow::Result<Vec<String>> {
-        let api_config = resolve_api_config(&self.config.api)?;
+        let provider = self.config.active_provider(self.provider_override.as_deref())?;
+        let api_config = resolve_api_config(provider)?;
         let models_endpoint = api_config.models_endpoint.as_deref().ok_or_else(|| {
             anyhow::anyhow!("Models endpoint not available for custom api.endpoint. Set a built-in provider.")
         })?;
@@ -55,7 +66,8 @@ impl AiClient {
     }
 
     pub async fn send_chat_request(&self, system_msg: &Message<'_>, user_msg: &Message<'_>) -> anyhow::Result<String> {
-        let api_config = resolve_api_config(&self.config.api)?;
+        let provider = self.config.active_provider(self.provider_override.as_deref())?;
+        let api_config = resolve_api_config(provider)?;
         let body = api_config.protocol.build_chat_request_body(&api_config, system_msg, user_msg);
         debug!("{body:#?}");
         let headers = api_config.protocol.headers(api_config.api_key.as_deref())?;

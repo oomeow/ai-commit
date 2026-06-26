@@ -19,11 +19,13 @@ pub async fn handle_commit(
     generate_only: bool,
     custom_config_file: Option<&PathBuf>,
     output_file: Option<&PathBuf>,
+    provider: Option<&str>,
 ) -> Result<()> {
     let ai_client = match custom_config_file {
         Some(config_path) => AiClient::with_config(AppConfig::load_from_path(config_path)?),
         None => AiClient::new(),
-    };
+    }
+    .with_provider(provider.map(str::to_owned));
 
     let staged_diff = get_staged_diff(&ai_client.config.commit)?;
     let unstaged_diff = get_unstaged_diff(&ai_client.config.commit)?;
