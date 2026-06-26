@@ -132,7 +132,13 @@ async fn prompt_provider_entry(theme: &ColorfulTheme, config: &AppConfig) -> Res
 async fn select_model(theme: &ColorfulTheme, base: &AppConfig, entry: &ApiConfig) -> Result<Option<String>> {
     // Build a throwaway config containing just this entry so the client resolves it.
     let mut probe = base.clone();
-    probe.providers = vec![entry.clone()];
+    let mut probe_entry = entry.clone();
+    // `fetch_provider_models` doesn't use the model, but `resolve_api_config`
+    // rejects an empty one — set a placeholder so resolution succeeds.
+    if probe_entry.model.trim().is_empty() {
+        probe_entry.model = "_".to_string();
+    }
+    probe.providers = vec![probe_entry];
     probe.default_provider = entry.name.clone();
 
     match AiClient::with_config(probe).fetch_provider_models().await {
