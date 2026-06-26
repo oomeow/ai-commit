@@ -13,6 +13,7 @@ AI Commit Tool 集成到你的 Git 工作流程中，自动生成遵循 Conventi
 - **AI 生成提交信息**：自动分析 git diff 并生成遵循常规提交格式的上下文提交信息
 - **提交前可编辑信息**：先查看 AI 结果，再用终端编辑器微调提交信息，最后确认是否提交
 - **多 Provider 支持**：内置支持 OpenAI、OpenRouter、DeepSeek、Zhipu、Ollama，也支持自定义 endpoint
+- **多 Provider 配置**：可在同一个配置文件中配置多个命名 provider，指定默认项，并通过 `--provider` 按次切换
 - **自动回退试运行**：当没有暂存内容时，会基于未暂存变更生成预览而不直接提交
 - **修订支持**：为修订之前的提交生成新信息
 - **本地消息缓存**：相同 diff 会复用已生成结果，并支持按需重新生成
@@ -106,6 +107,10 @@ ai-commit commit --generate-only
 
 # 将生成的提交信息写入文件
 ai-commit commit --output-file .git/COMMIT_EDITMSG
+
+# 本次运行使用指定的 provider（覆盖默认项）
+ai-commit --provider local
+ai-commit commit -p openrouter
 ```
 
 ### 配置命令
@@ -119,6 +124,24 @@ ai-commit config show
 
 # 在终端编辑器中编辑配置
 ai-commit config edit
+```
+
+### Provider 命令
+
+在同一个配置文件中管理多个命名 provider：
+
+```bash
+# 列出已配置的 provider（默认项以 * 标记）
+ai-commit config provider list
+
+# 交互式新增 provider（选择类型、命名、输入 key、选择 model）
+ai-commit config provider add
+
+# 设置默认 provider
+ai-commit config provider use local
+
+# 删除 provider（若删除的是默认项会自动重置默认）
+ai-commit config provider remove local
 ```
 
 ### Shell 补全
@@ -165,9 +188,14 @@ ai-commit config init
 ### 默认配置结构
 
 ```toml
-[api]
-# 使用内置 provider；或者省略该字段，手动配置 endpoint/model。
-provider = "openrouter"
+# 默认使用的 provider 条目名称（引用某个 [[providers]].name）。
+# 可通过 `--provider <name>` 按次覆盖。
+default_provider = "openrouter"
+
+# 配置一个或多个 provider，每个条目相互独立。
+[[providers]]
+name = "openrouter"           # 你为该条目起的标识；被 default_provider / --provider 引用
+provider = "openrouter"       # 内置 provider 类型（决定 base_url + protocol）
 # endpoint = "https://openrouter.ai/api/v1/chat/completions"
 # protocol = "openai"
 api_key = "12345-678910-1122-3344-123123123123"
@@ -175,6 +203,12 @@ model = "z-ai/glm-4.5-air:free"
 max_tokens = 1000
 temperature = 0.7
 # context_limit = 200000
+
+# 可以配置任意多个 provider：
+# [[providers]]
+# name = "local"
+# provider = "ollama"
+# model = "qwen2.5:14b"
 
 [commit]
 auto_confirm = false
@@ -191,10 +225,19 @@ system_prompt = """You are a senior software engineer writing precise Git commit
 user_prompt_template = """Review the following Git diff and write the best commit message..."""
 ```
 
+> 向后兼容：旧的单 `[api]` 表配置仍可使用，加载时会自动迁移为一个 `[[providers]]` 条目，`config show` 会以新格式回写。
+
 ### 配置选项
 
-#### API 设置 (`[api]`)
+#### Provider 选择
 
+- `default_provider`：未指定 `--provider` 时使用的 `[[providers]]` 条目名称。未设置或找不到时回退到第一个条目。
+
+#### Provider 设置 (`[[providers]]`)
+
+每个 `[[providers]]` 条目是一个独立的 provider 配置：
+
+- `name`：你为该条目起的标识，被 `default_provider` 和 `--provider` 引用。省略时默认取内置 provider 名称。
 - `provider`：可选的内置 provider 名称，例如 `openai`、`openrouter`、`deepseek`、`zhipu`、`ollama`、`lmstudio`
 - `endpoint`：可选的最终 chat API 地址；设置后客户端会直接调用该 URL，不再追加 protocol path
 - `protocol`：可选请求/响应格式：`openai`、`ollama` 或 `lmstudio`；内置 provider 默认使用自身格式，自定义 endpoint 默认使用 `openai`
@@ -259,13 +302,16 @@ Git diff:
 
 ### 交互式配置初始化
 
-`ai-commit config init` 现在会进入交互式流程：
+`ai-commit config init` 会进入交互式流程：
 
 - 选择一个内置 provider
+- 为该 provider 条目命名（供 `default_provider` 和 `--provider` 引用）
 - 输入该 provider 的 API Key，或对 Ollama 这类本地 provider 留空
 - 在线拉取 models，并通过分页模糊搜索选择模型
 - 如果拉取失败，可回退为手动输入 model
-- 其余配置项使用默认值保存
+- 保存该条目并将其设为默认 provider
+
+之后可用 `ai-commit config provider add` 注册更多 provider，用 `ai-commit config provider use <name>` 切换默认项。
 
 ## 提交信息格式
 
@@ -384,12 +430,17 @@ ai-commit commit --dry-run
 - 配置缺失时会自动创建默认配置
 - 通过 `config edit` 保存前会校验 TOML 格式
 - 配置变更的热重载，无需重启
+- 支持多个命名 provider，并可选择默认项
+- 向后兼容旧的单 `[api]` 配置段（加载时自动迁移）
 - 支持内置 provider 和直接配置自定义 chat endpoint
 
 自定义 endpoint 示例：
 
 ```toml
-[api]
+default_provider = "custom"
+
+[[providers]]
+name = "custom"
 endpoint = "https://api.example.com/v1/chat/completions"
 protocol = "openai"
 api_key = "your-api-key"
