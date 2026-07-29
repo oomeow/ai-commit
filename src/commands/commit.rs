@@ -1,9 +1,10 @@
 use std::{
     hash::{DefaultHasher, Hash, Hasher},
     path::PathBuf,
+    process::Command,
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use colored::*;
 use dialoguer::Editor;
 use log::debug;
@@ -12,7 +13,8 @@ use crate::{
     ai::AiClient,
     commands::show_confirm,
     config::{AppConfig, Cache, CommitMsg, get_now_timestamp},
-    git::{DiffContext, execute_commit_with_cli, get_staged_diff, get_unstaged_diff},
+    git::{DiffContext, execute_commit_with_cli, get_staged_diff, get_unstaged_diff, open_repo},
+    hooks::find_available_hook,
 };
 
 pub async fn handle_commit(
@@ -45,6 +47,22 @@ pub async fn handle_commit(
         println!("{}", "❌ No changes found to commit.".red());
         return Ok(());
     };
+
+    let mut skip_verify = false;
+
+    if !generate_only {
+        let repo = open_repo();
+        if let Some(hook_path) = find_available_hook(&repo, crate::hooks::HOOK_PRE_COMMIT)? {
+            println!("{}", "🚧 Find pre-commit hook, running it first...".cyan());
+            let pwd = repo.workdir().context("failed to get repo work dir")?;
+            let mut child = Command::new(hook_path).current_dir(pwd).spawn()?;
+            let status = child.wait()?;
+            if !status.success() {
+                return Ok(());
+            }
+            skip_verify = true;
+        }
+    }
 
     if !generate_only {
         println!("{}", "🤖 Generating commit message using AI service...".cyan());
@@ -131,7 +149,7 @@ pub async fn handle_commit(
         }
     }
 
-    execute_commit_with_cli(&message)?;
+    execute_commit_with_cli(&message, skip_verify)?;
 
     Ok(())
 }

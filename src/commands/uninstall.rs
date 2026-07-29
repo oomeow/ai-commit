@@ -3,7 +3,7 @@ use std::fs;
 use anyhow::Result;
 use colored::*;
 
-use crate::git::open_repo;
+use crate::{git::open_repo, hooks::is_ai_commit_hook};
 
 pub fn uninstall_hook() -> Result<()> {
     println!("Uninstalling AI-assisted Git hooks...");
@@ -13,7 +13,7 @@ pub fn uninstall_hook() -> Result<()> {
     let hook_path = hooks_dir.join("prepare-commit-msg");
 
     if hook_path.exists() {
-        let is_ai_commit_hook = fs::read_to_string(&hook_path).is_ok_and(|content| content.contains("ai-commit"));
+        let is_ai_commit_hook = is_ai_commit_hook(&hook_path);
 
         if is_ai_commit_hook {
             fs::remove_file(&hook_path)?;

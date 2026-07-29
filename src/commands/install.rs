@@ -3,7 +3,7 @@ use std::fs;
 use anyhow::Result;
 use colored::*;
 
-use crate::git::open_repo;
+use crate::{git::open_repo, hooks::is_ai_commit_hook};
 
 pub fn install_hook() -> Result<()> {
     println!("Installing AI-assisted Git hooks...");
@@ -14,7 +14,7 @@ pub fn install_hook() -> Result<()> {
     let hook_content = include_str!("../../templates/prepare-commit-msg");
 
     if hook_path.exists() {
-        let is_ai_commit_hook = fs::read_to_string(&hook_path).is_ok_and(|content| content.contains("ai-commit"));
+        let is_ai_commit_hook = is_ai_commit_hook(&hook_path);
 
         if is_ai_commit_hook {
             println!("{}", "ℹ️  prepare-commit-msg hook already exists (ai-commit version). Overwriting.".yellow());

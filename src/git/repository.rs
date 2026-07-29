@@ -11,11 +11,15 @@ pub fn open_repo() -> Repository {
     })
 }
 
-pub fn execute_commit_with_cli(message: &str) -> Result<()> {
+pub fn execute_commit_with_cli(message: &str, skip_verify: bool) -> Result<()> {
     println!("🚀 Committing changes...");
 
     let mut cmd = Command::new("git");
-    cmd.args(["commit", "-m", message]);
+    let mut args = vec!["commit", "-m", message];
+    if skip_verify {
+        args.push("--no-verify");
+    }
+    cmd.args(args);
 
     if is_gpg_signing_enabled()? {
         println!("🔐 GPG signing is enabled, using git command for proper signing...");

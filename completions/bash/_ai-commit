@@ -561,7 +561,7 @@ _ai-commit() {
             return 0
             ;;
         ai__subcmd__commit__subcmd__config__subcmd__provider__subcmd__remove)
-            opts="-h --help <NAME>"
+            opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -575,7 +575,7 @@ _ai-commit() {
             return 0
             ;;
         ai__subcmd__commit__subcmd__config__subcmd__provider__subcmd__use)
-            opts="-h --help <NAME>"
+            opts="-h --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
