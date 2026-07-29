@@ -17,6 +17,7 @@ pub fn execute_commit_with_cli(message: &str, skip_verify: bool) -> Result<()> {
     let mut cmd = Command::new("git");
     let mut args = vec!["commit", "-m", message];
     if skip_verify {
+        // Bypass the pre-commit and commit-msg hooks.
         args.push("--no-verify");
     }
     cmd.args(args);
