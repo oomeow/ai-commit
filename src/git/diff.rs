@@ -1,7 +1,7 @@
 use std::str;
 
 use anyhow::Result;
-use git2::{DiffLineType, DiffOptions, DiffStatsFormat, IndexAddOption};
+use git2::{Delta, DiffLineType, DiffOptions, DiffStatsFormat, IndexAddOption};
 use log::debug;
 
 use crate::{config::CommitConfig, git::open_repo};
@@ -98,15 +98,25 @@ fn format_diff(diff: git2::Diff, commit_config: &CommitConfig) -> Result<DiffCon
                 return true;
             }
         }
-        if let Ok(content) = str::from_utf8(line.content()) {
+        if let Ok(line_content) = str::from_utf8(line.content()) {
             if matches!(line.origin_value(), DiffLineType::Context | DiffLineType::Addition | DiffLineType::Deletion) {
                 diff_content.push(line.origin());
             }
-            let line_max_backticks = max_consecutive_backticks(content);
+            let content = if matches!(delta.status(), Delta::Added | Delta::Deleted)
+                && let Some((idx, _)) = line_content.char_indices().nth(1000)
+            {
+                debug!("truncating large diff line: {} bytes", line.content().len());
+                let mut result = line_content[..idx].to_string();
+                result.push_str("...\n");
+                result
+            } else {
+                line_content.to_string()
+            };
+            let line_max_backticks = max_consecutive_backticks(&content);
             if line_max_backticks > max_backticks {
                 max_backticks = line_max_backticks;
             }
-            diff_content.push_str(content);
+            diff_content.push_str(&content);
         }
         true
     })?;
