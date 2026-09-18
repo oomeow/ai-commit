@@ -1,7 +1,6 @@
 use std::{
     hash::{DefaultHasher, Hash, Hasher},
     path::PathBuf,
-    process::Command,
 };
 
 use anyhow::{Context, Result};
@@ -14,7 +13,7 @@ use crate::{
     commands::show_confirm,
     config::{AppConfig, Cache, CommitMsg, get_now_timestamp},
     git::{DiffContext, execute_commit_with_cli, get_staged_diff, get_unstaged_diff, open_repo},
-    hooks::find_available_hook,
+    hooks::{create_hook_command, find_available_hook},
 };
 
 pub async fn handle_commit(
@@ -55,7 +54,9 @@ pub async fn handle_commit(
         if let Some(hook_path) = find_available_hook(&repo, crate::hooks::HOOK_PRE_COMMIT)? {
             println!("{}", "🚧 Find pre-commit hook, running it first...".cyan());
             let pwd = repo.workdir().context("failed to get repo work dir")?;
-            let mut child = Command::new(hook_path).current_dir(pwd).spawn()?;
+            let mut cmd = create_hook_command(&hook_path);
+            cmd.current_dir(pwd);
+            let mut child = cmd.spawn()?;
             let status = child.wait()?;
             if !status.success() {
                 return Ok(());

@@ -3,6 +3,7 @@ mod prepare_commit_msg;
 
 use std::{
     path::{Path, PathBuf},
+    process::Command,
     str::FromStr,
 };
 
@@ -70,6 +71,80 @@ fn is_executable(path: &Path) -> bool {
 /// to be executable (which is not far from the truth for windows platform.)
 const fn is_executable(_: &Path) -> bool {
     true
+}
+
+/// Build a command that runs the given hook the way Git would on this platform.
+///
+/// On Windows a hook is often a POSIX shell script (e.g. one managed by husky),
+/// which cannot be launched directly: `CreateProcess` rejects it with
+/// `os error 193` ("not a valid Win32 application"). Git for Windows runs such
+/// hooks through its bundled `sh.exe`, so we do the same when the hook declares
+/// a shell interpreter in its shebang line.
+pub fn create_hook_command(hook_path: &Path) -> Command {
+    #[cfg(windows)]
+    if let Some(shell) = windows_shell_for(hook_path) {
+        let mut cmd = Command::new(shell);
+        cmd.arg(hook_path);
+        return cmd;
+    }
+
+    Command::new(hook_path)
+}
+
+/// Resolve the shell that should run a shebang hook, preferring the interpreter
+/// shipped with Git for Windows and falling back to `PATH` lookup by name.
+#[cfg(windows)]
+fn windows_shell_for(hook_path: &Path) -> Option<PathBuf> {
+    let interpreter = shebang_interpreter(hook_path)?;
+    let executable = format!("{interpreter}.exe");
+
+    if let Some(root) = git_install_root() {
+        for dir in ["bin", "usr/bin"] {
+            let candidate = root.join(dir).join(&executable);
+            if candidate.is_file() {
+                return Some(candidate);
+            }
+        }
+    }
+
+    Some(PathBuf::from(interpreter))
+}
+
+/// Parse the interpreter name from a hook's shebang line, e.g.
+/// `#!/usr/bin/env sh` and `#!/bin/bash` yield `sh` and `bash`.
+#[cfg(windows)]
+fn shebang_interpreter(hook_path: &Path) -> Option<String> {
+    use std::io::{BufRead, BufReader};
+
+    let file = std::fs::File::open(hook_path).ok()?;
+    let mut first_line = String::new();
+    BufReader::new(file).read_line(&mut first_line).ok()?;
+
+    let rest = first_line.trim().strip_prefix("#!")?;
+    let mut tokens = rest.split_whitespace();
+    let program = tokens.next()?;
+
+    let name = if Path::new(program).file_name()?.to_str()? == "env" {
+        tokens.find(|token| !token.starts_with('-'))?
+    } else {
+        program
+    };
+
+    Some(Path::new(name).file_name()?.to_str()?.to_string())
+}
+
+/// Resolve the Git installation root from `git --exec-path`
+/// (e.g. `<root>/mingw64/libexec/git-core` -> `<root>`).
+#[cfg(windows)]
+fn git_install_root() -> Option<PathBuf> {
+    let output = Command::new("git").arg("--exec-path").output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+
+    let exec_path = String::from_utf8_lossy(&output.stdout);
+    let exec_path = Path::new(exec_path.trim());
+    exec_path.ancestors().nth(3).map(Path::to_path_buf)
 }
 
 pub fn is_ai_commit_hook(hook: &Path) -> bool {

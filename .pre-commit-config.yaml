@@ -20,8 +20,8 @@ repos:
     hooks:
       - id: generate-completions
         name: Generate completions
-        entry: just completion
-        language: system
+        entry: ./scripts/run-on-unix.sh
+        language: script
         pass_filenames: false
 
       - id: cargo-fmt
